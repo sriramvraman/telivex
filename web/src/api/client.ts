@@ -1,0 +1,151 @@
+/**
+ * Telivex API Client
+ * Handles all communication with the backend API.
+ */
+
+import type {
+  Biomarker,
+  Document,
+  LabEvent,
+  Trend,
+  UnmappedRow,
+  UploadResponse,
+} from "../types";
+
+const API_BASE = "/api/v1";
+
+class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    throw new ApiError(
+      errorBody.detail || `HTTP ${response.status}`,
+      response.status,
+    );
+  }
+  return response.json();
+}
+
+// ============ Document Endpoints ============
+
+/** Upload a PDF document for extraction */
+export async function uploadDocument(
+  file: File,
+  collectedDate: string,
+): Promise<UploadResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(
+    `${API_BASE}/documents/upload?collected_date=${collectedDate}`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
+
+  return handleResponse<UploadResponse>(response);
+}
+
+/** List all documents */
+export async function listDocuments(): Promise<Document[]> {
+  const response = await fetch(`${API_BASE}/documents`);
+  return handleResponse<Document[]>(response);
+}
+
+/** Get a single document by ID */
+export async function getDocument(documentId: string): Promise<Document> {
+  const response = await fetch(`${API_BASE}/documents/${documentId}`);
+  return handleResponse<Document>(response);
+}
+
+/** Get events extracted from a document */
+export async function getDocumentEvents(
+  documentId: string,
+): Promise<LabEvent[]> {
+  const response = await fetch(`${API_BASE}/documents/${documentId}/events`);
+  return handleResponse<LabEvent[]>(response);
+}
+
+/** Get unmapped rows from a document */
+export async function getDocumentUnmappedRows(
+  documentId: string,
+): Promise<UnmappedRow[]> {
+  const response = await fetch(`${API_BASE}/documents/${documentId}/unmapped`);
+  return handleResponse<UnmappedRow[]>(response);
+}
+
+// ============ Biomarker Endpoints ============
+
+/** List all biomarkers in the registry */
+export async function listBiomarkers(): Promise<Biomarker[]> {
+  const response = await fetch(`${API_BASE}/biomarkers`);
+  return handleResponse<Biomarker[]>(response);
+}
+
+/** Search biomarkers by name or alias */
+export async function searchBiomarkers(query: string): Promise<Biomarker[]> {
+  const response = await fetch(
+    `${API_BASE}/biomarkers/search?q=${encodeURIComponent(query)}`,
+  );
+  return handleResponse<Biomarker[]>(response);
+}
+
+/** Get a single biomarker by ID */
+export async function getBiomarker(biomarkerId: string): Promise<Biomarker> {
+  const response = await fetch(`${API_BASE}/biomarkers/${biomarkerId}`);
+  return handleResponse<Biomarker>(response);
+}
+
+// ============ Event Endpoints ============
+
+/** List all events, optionally filtered by biomarker */
+export async function listEvents(biomarkerId?: string): Promise<LabEvent[]> {
+  const url = biomarkerId
+    ? `${API_BASE}/events?biomarker_id=${biomarkerId}`
+    : `${API_BASE}/events`;
+  const response = await fetch(url);
+  return handleResponse<LabEvent[]>(response);
+}
+
+/** Get a single event by ID */
+export async function getEvent(eventId: string): Promise<LabEvent> {
+  const response = await fetch(`${API_BASE}/events/${eventId}`);
+  return handleResponse<LabEvent>(response);
+}
+
+// ============ Trend Endpoints ============
+
+/** Get trend data for a biomarker */
+export async function getTrend(biomarkerId: string): Promise<Trend> {
+  const response = await fetch(`${API_BASE}/trends/${biomarkerId}`);
+  return handleResponse<Trend>(response);
+}
+
+/** Get trends for multiple biomarkers */
+export async function getTrends(biomarkerIds: string[]): Promise<Trend[]> {
+  const params = biomarkerIds.map((id) => `ids=${id}`).join("&");
+  const response = await fetch(`${API_BASE}/trends?${params}`);
+  return handleResponse<Trend[]>(response);
+}
+
+/** List available trends (biomarkers with data) */
+export async function listAvailableTrends(): Promise<
+  Array<{ biomarker_id: string; biomarker_name: string; event_count: number }>
+> {
+  const response = await fetch(`${API_BASE}/trends`);
+  return handleResponse<
+    Array<{ biomarker_id: string; biomarker_name: string; event_count: number }>
+  >(response);
+}
+
+export { ApiError };
