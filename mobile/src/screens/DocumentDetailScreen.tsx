@@ -1,6 +1,6 @@
 /**
  * Document Detail Screen - Shows extracted events grouped by panel and unmapped rows.
- * Supports document deletion.
+ * Supports document deletion and biomarker detail viewing.
  */
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
+  Modal,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import type { RouteProp } from "@react-navigation/native";
@@ -21,10 +22,14 @@ import type {
   RootStackParamList,
   LabEventResponse,
   UnmappedRowResponse,
+  BiomarkerResponse,
 } from "../types";
 
 type RouteProps = RouteProp<RootStackParamList, "DocumentDetail">;
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, "DocumentDetail">;
+type NavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "DocumentDetail"
+>;
 
 /** Group events by category */
 function groupEventsByCategory(
@@ -75,6 +80,149 @@ function CollapsiblePanel({
   );
 }
 
+/** Biomarker Detail Modal */
+function BiomarkerDetailModal({
+  event,
+  onClose,
+}: {
+  event: LabEventResponse;
+  onClose: () => void;
+}) {
+  const [biomarker, setBiomarker] = useState<BiomarkerResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBiomarker = async () => {
+      try {
+        const data = await apiClient.getBiomarker(event.biomarker_id);
+        setBiomarker(data);
+      } catch (err) {
+        console.error("Failed to fetch biomarker:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBiomarker();
+  }, [event.biomarker_id]);
+
+  return (
+    <Modal
+      visible
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <View style={modalStyles.container}>
+        {/* Header */}
+        <View style={modalStyles.header}>
+          <View>
+            <Text style={modalStyles.title}>{event.analyte_name}</Text>
+            <Text style={modalStyles.subtitle}>{event.biomarker_id}</Text>
+          </View>
+          <TouchableOpacity onPress={onClose} style={modalStyles.closeButton}>
+            <Text style={modalStyles.closeButtonText}>✕</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={modalStyles.content}>
+          {/* Current Value */}
+          <View style={modalStyles.valueCard}>
+            <Text style={modalStyles.valueLabel}>Your Value</Text>
+            <View style={modalStyles.valueRow}>
+              <Text style={modalStyles.valueNumber}>
+                {event.value_normalized.toFixed(2)}
+              </Text>
+              <Text style={modalStyles.valueUnit}>{event.unit_canonical}</Text>
+            </View>
+            {event.value_original !== event.value_normalized && (
+              <Text style={modalStyles.originalValue}>
+                Original: {event.value_original} {event.unit_original}
+              </Text>
+            )}
+          </View>
+
+          {loading ? (
+            <View style={modalStyles.loadingContainer}>
+              <ActivityIndicator size="small" color="#2563eb" />
+              <Text style={modalStyles.loadingText}>Loading details...</Text>
+            </View>
+          ) : biomarker ? (
+            <>
+              {/* Reference Range */}
+              {biomarker.default_reference_range_notes && (
+                <View style={modalStyles.referenceCard}>
+                  <Text style={modalStyles.referenceLabel}>
+                    📊 Reference Range
+                  </Text>
+                  <Text style={modalStyles.referenceText}>
+                    {biomarker.default_reference_range_notes}
+                  </Text>
+                </View>
+              )}
+
+              {/* Biomarker Info */}
+              <View style={modalStyles.section}>
+                <Text style={modalStyles.sectionTitle}>Biomarker Details</Text>
+                <View style={modalStyles.infoGrid}>
+                  <View style={modalStyles.infoItem}>
+                    <Text style={modalStyles.infoLabel}>Specimen</Text>
+                    <Text style={modalStyles.infoValue}>
+                      {biomarker.specimen}
+                    </Text>
+                  </View>
+                  <View style={modalStyles.infoItem}>
+                    <Text style={modalStyles.infoLabel}>Category</Text>
+                    <Text style={modalStyles.infoValue}>
+                      {biomarker.category || "—"}
+                    </Text>
+                  </View>
+                  <View style={modalStyles.infoItem}>
+                    <Text style={modalStyles.infoLabel}>Canonical Unit</Text>
+                    <Text style={modalStyles.infoValue}>
+                      {biomarker.canonical_unit}
+                    </Text>
+                  </View>
+                  <View style={modalStyles.infoItem}>
+                    <Text style={modalStyles.infoLabel}>Measurement</Text>
+                    <Text style={modalStyles.infoValue}>
+                      {biomarker.measurement_property || "—"}
+                    </Text>
+                  </View>
+                </View>
+
+                {biomarker.aliases && biomarker.aliases.length > 0 && (
+                  <View style={modalStyles.aliasesContainer}>
+                    <Text style={modalStyles.aliasesLabel}>Also known as</Text>
+                    <View style={modalStyles.aliasesList}>
+                      {biomarker.aliases.map((alias) => (
+                        <View key={alias} style={modalStyles.aliasBadge}>
+                          <Text style={modalStyles.aliasText}>{alias}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </View>
+            </>
+          ) : (
+            <Text style={modalStyles.errorText}>
+              Biomarker details not available
+            </Text>
+          )}
+
+          {/* Provenance */}
+          <View style={modalStyles.provenance}>
+            <Text style={modalStyles.provenanceText}>
+              Source: Page {event.page ?? "?"} · Confidence:{" "}
+              {(event.confidence * 100).toFixed(0)}%
+            </Text>
+          </View>
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
 export function DocumentDetailScreen() {
   const route = useRoute<RouteProps>();
   const navigation = useNavigation<NavigationProp>();
@@ -86,6 +234,9 @@ export function DocumentDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"events" | "unmapped">("events");
   const [deleting, setDeleting] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<LabEventResponse | null>(
+    null,
+  );
 
   const groupedEvents = useMemo(() => groupEventsByCategory(events), [events]);
 
@@ -101,7 +252,9 @@ export function DocumentDetailScreen() {
         setEvents(eventsData);
         setUnmapped(unmappedData);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load document");
+        setError(
+          err instanceof Error ? err.message : "Failed to load document",
+        );
       } finally {
         setLoading(false);
       }
@@ -127,7 +280,9 @@ export function DocumentDetailScreen() {
             } catch (err) {
               Alert.alert(
                 "Error",
-                err instanceof Error ? err.message : "Failed to delete document",
+                err instanceof Error
+                  ? err.message
+                  : "Failed to delete document",
               );
             } finally {
               setDeleting(false);
@@ -201,6 +356,13 @@ export function DocumentDetailScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Hint */}
+      {activeTab === "events" && events.length > 0 && (
+        <Text style={styles.hintText}>
+          Tap a parameter to view details and reference range
+        </Text>
+      )}
+
       <ScrollView style={styles.content}>
         {activeTab === "events" ? (
           events.length === 0 ? (
@@ -217,7 +379,12 @@ export function DocumentDetailScreen() {
                   defaultOpen={idx === 0}
                 >
                   {categoryEvents.map((event) => (
-                    <View key={event.event_id} style={styles.eventCard}>
+                    <TouchableOpacity
+                      key={event.event_id}
+                      style={styles.eventCard}
+                      onPress={() => setSelectedEvent(event)}
+                      activeOpacity={0.7}
+                    >
                       <View style={styles.eventHeader}>
                         <Text style={styles.analyteName}>
                           {event.analyte_name}
@@ -227,24 +394,15 @@ export function DocumentDetailScreen() {
                         </Text>
                       </View>
                       <View style={styles.eventBody}>
-                        <View style={styles.valueRow}>
-                          <Text style={styles.valueLabel}>Normalized:</Text>
-                          <Text style={styles.value}>
-                            {event.value_normalized.toFixed(2)}{" "}
-                            {event.unit_canonical}
-                          </Text>
-                        </View>
-                        <View style={styles.valueRow}>
-                          <Text style={styles.valueLabel}>Original:</Text>
-                          <Text style={styles.originalValue}>
-                            {event.value_original} {event.unit_original}
-                          </Text>
-                        </View>
+                        <Text style={styles.value}>
+                          {event.value_normalized.toFixed(2)}{" "}
+                          <Text style={styles.unit}>{event.unit_canonical}</Text>
+                        </Text>
                         <Text style={styles.meta}>
-                          Page {event.page ?? "?"}
+                          Page {event.page ?? "?"} · Tap for details
                         </Text>
                       </View>
-                    </View>
+                    </TouchableOpacity>
                   ))}
                 </CollapsiblePanel>
               ),
@@ -281,6 +439,14 @@ export function DocumentDetailScreen() {
           ))
         )}
       </ScrollView>
+
+      {/* Biomarker Detail Modal */}
+      {selectedEvent && (
+        <BiomarkerDetailModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
+      )}
     </View>
   );
 }
@@ -359,6 +525,13 @@ const styles = StyleSheet.create({
   warningText: {
     color: "#d97706",
   },
+  hintText: {
+    fontSize: 12,
+    color: "#9ca3af",
+    textAlign: "center",
+    paddingVertical: 8,
+    backgroundColor: "#fff",
+  },
   content: {
     flex: 1,
     padding: 16,
@@ -421,6 +594,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   eventHeader: {
     flexDirection: "row",
@@ -446,22 +621,15 @@ const styles = StyleSheet.create({
   eventBody: {
     gap: 4,
   },
-  valueRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  valueLabel: {
-    fontSize: 13,
-    color: "#6b7280",
-  },
   value: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "700",
     color: "#2563eb",
   },
-  originalValue: {
+  unit: {
     fontSize: 13,
-    color: "#9ca3af",
+    fontWeight: "400",
+    color: "#6b7280",
   },
   meta: {
     fontSize: 11,
@@ -528,5 +696,173 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: 14,
     color: "#16a34a",
+  },
+});
+
+const modalStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1f2937",
+  },
+  subtitle: {
+    fontSize: 13,
+    color: "#6b7280",
+    marginTop: 2,
+  },
+  closeButton: {
+    padding: 8,
+  },
+  closeButtonText: {
+    fontSize: 20,
+    color: "#6b7280",
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  valueCard: {
+    backgroundColor: "#eff6ff",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+  },
+  valueLabel: {
+    fontSize: 14,
+    color: "#2563eb",
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  valueRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 8,
+  },
+  valueNumber: {
+    fontSize: 36,
+    fontWeight: "700",
+    color: "#1e40af",
+  },
+  valueUnit: {
+    fontSize: 18,
+    color: "#3b82f6",
+  },
+  originalValue: {
+    fontSize: 13,
+    color: "#60a5fa",
+    marginTop: 8,
+  },
+  referenceCard: {
+    backgroundColor: "#f0fdf4",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+  },
+  referenceLabel: {
+    fontSize: 14,
+    color: "#15803d",
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  referenceText: {
+    fontSize: 15,
+    color: "#166534",
+    lineHeight: 22,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1f2937",
+    marginBottom: 12,
+  },
+  infoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  infoItem: {
+    backgroundColor: "#f9fafb",
+    borderRadius: 8,
+    padding: 12,
+    width: "48%",
+  },
+  infoLabel: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginBottom: 4,
+  },
+  infoValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1f2937",
+  },
+  aliasesContainer: {
+    backgroundColor: "#f9fafb",
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 10,
+  },
+  aliasesLabel: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginBottom: 8,
+  },
+  aliasesList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  aliasBadge: {
+    backgroundColor: "#e5e7eb",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  aliasText: {
+    fontSize: 12,
+    color: "#4b5563",
+  },
+  loadingContainer: {
+    alignItems: "center",
+    padding: 30,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: "#6b7280",
+    marginTop: 8,
+  },
+  errorText: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
+    padding: 20,
+  },
+  provenance: {
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+    paddingTop: 16,
+    marginTop: 10,
+  },
+  provenanceText: {
+    fontSize: 12,
+    color: "#9ca3af",
+    textAlign: "center",
   },
 });

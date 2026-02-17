@@ -15,11 +15,13 @@ export interface Biomarker {
   biomarker_id: string;
   analyte_name: string;
   specimen: string;
-  measurement_property: string;
+  measurement_property: string | null;
   canonical_unit: string;
-  category: string;
+  category: string | null;
+  panel_seed: string | null;
   aliases: string[];
   is_derived: boolean;
+  default_reference_range_notes: string | null;
 }
 
 /** Lab event with provenance */

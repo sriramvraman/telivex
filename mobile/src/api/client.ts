@@ -9,6 +9,7 @@ import type {
   LabEventResponse,
   UnmappedRowResponse,
   BiomarkerListResponse,
+  BiomarkerResponse,
   BiomarkerTrend,
   ApiError,
 } from "../types";
@@ -125,6 +126,10 @@ class TelivexApiClient {
     const endpoint = `/biomarkers/${queryString ? `?${queryString}` : ""}`;
 
     return this.request<BiomarkerListResponse>(endpoint);
+  }
+
+  async getBiomarker(biomarkerId: string): Promise<BiomarkerResponse> {
+    return this.request<BiomarkerResponse>(`/biomarkers/${biomarkerId}`);
   }
 
   // Trend endpoints (to be implemented on backend)

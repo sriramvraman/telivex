@@ -2,12 +2,13 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   deleteDocument,
+  getBiomarker,
   getDocumentEvents,
   getDocumentUnmappedRows,
   listDocuments,
 } from "../api/client";
 import { useApi } from "../hooks/useApi";
-import type { Document, LabEvent, UnmappedRow } from "../types";
+import type { Biomarker, Document, LabEvent, UnmappedRow } from "../types";
 
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString("en-IN", {
@@ -18,9 +19,7 @@ function formatDate(dateString: string): string {
 }
 
 /** Group events by category */
-function groupEventsByCategory(
-  events: LabEvent[],
-): Map<string, LabEvent[]> {
+function groupEventsByCategory(events: LabEvent[]): Map<string, LabEvent[]> {
   const groups = new Map<string, LabEvent[]>();
   for (const event of events) {
     const category = event.category || "Uncategorized";
@@ -70,6 +69,142 @@ function CollapsiblePanel({
   );
 }
 
+/** Biomarker detail modal */
+function BiomarkerDetailModal({
+  event,
+  onClose,
+}: {
+  event: LabEvent;
+  onClose: () => void;
+}) {
+  const { data: biomarker, loading } = useApi<Biomarker>(
+    () => getBiomarker(event.biomarker_id),
+    [event.biomarker_id],
+  );
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">
+              {event.analyte_name || event.biomarker_id}
+            </h3>
+            <p className="text-sm text-gray-500">{event.biomarker_id}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-xl p-1"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Current Value */}
+          <div className="bg-blue-50 rounded-lg p-4">
+            <p className="text-sm text-blue-600 font-medium mb-1">
+              Your Value
+            </p>
+            <p className="text-3xl font-bold text-blue-700">
+              {event.value_normalized?.toFixed(2) ?? event.value_original}
+              <span className="text-lg font-normal ml-2">
+                {event.unit_canonical ?? event.unit_original}
+              </span>
+            </p>
+            {event.value_original !== event.value_normalized && (
+              <p className="text-sm text-blue-500 mt-1">
+                Original: {event.value_original} {event.unit_original}
+              </p>
+            )}
+          </div>
+
+          {loading ? (
+            <div className="text-center py-4 text-gray-500">
+              Loading biomarker details...
+            </div>
+          ) : biomarker ? (
+            <>
+              {/* Reference Range */}
+              {biomarker.default_reference_range_notes && (
+                <div className="bg-green-50 rounded-lg p-4">
+                  <p className="text-sm text-green-700 font-medium mb-1">
+                    📊 Reference Range
+                  </p>
+                  <p className="text-gray-800 whitespace-pre-line">
+                    {biomarker.default_reference_range_notes}
+                  </p>
+                </div>
+              )}
+
+              {/* Biomarker Info */}
+              <div className="space-y-3">
+                <h4 className="font-medium text-gray-900">Biomarker Details</h4>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-gray-50 rounded p-3">
+                    <p className="text-gray-500">Specimen</p>
+                    <p className="font-medium text-gray-900">
+                      {biomarker.specimen}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded p-3">
+                    <p className="text-gray-500">Category</p>
+                    <p className="font-medium text-gray-900">
+                      {biomarker.category || "—"}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded p-3">
+                    <p className="text-gray-500">Canonical Unit</p>
+                    <p className="font-medium text-gray-900">
+                      {biomarker.canonical_unit}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded p-3">
+                    <p className="text-gray-500">Measurement</p>
+                    <p className="font-medium text-gray-900">
+                      {biomarker.measurement_property || "—"}
+                    </p>
+                  </div>
+                </div>
+
+                {biomarker.aliases && biomarker.aliases.length > 0 && (
+                  <div className="bg-gray-50 rounded p-3">
+                    <p className="text-gray-500 text-sm mb-1">Also known as</p>
+                    <div className="flex flex-wrap gap-1">
+                      {biomarker.aliases.map((alias) => (
+                        <span
+                          key={alias}
+                          className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-xs"
+                        >
+                          {alias}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <p className="text-gray-500 text-sm">
+              Biomarker details not available
+            </p>
+          )}
+
+          {/* Provenance */}
+          <div className="border-t pt-4">
+            <p className="text-xs text-gray-400">
+              Source: Page {event.page} · Confidence:{" "}
+              {(event.confidence * 100).toFixed(0)}%
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface DocumentDetailProps {
   document: Document;
   onClose: () => void;
@@ -89,6 +224,7 @@ function DocumentDetail({ document, onClose, onDelete }: DocumentDetailProps) {
 
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<LabEvent | null>(null);
 
   const groupedEvents = useMemo(() => {
     return events ? groupEventsByCategory(events) : new Map();
@@ -154,6 +290,9 @@ function DocumentDetail({ document, onClose, onDelete }: DocumentDetailProps) {
         <h4 className="font-medium text-gray-900 mb-3">
           Extracted Events ({events?.length ?? "..."})
         </h4>
+        <p className="text-xs text-gray-500 mb-2">
+          Click on a parameter to see details and reference range
+        </p>
         {eventsLoading ? (
           <p className="text-gray-500">Loading events...</p>
         ) : events && events.length > 0 ? (
@@ -166,41 +305,32 @@ function DocumentDetail({ document, onClose, onDelete }: DocumentDetailProps) {
                   count={categoryEvents.length}
                   defaultOpen={idx === 0}
                 >
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-3 py-2 text-left text-gray-600">
-                          Biomarker
-                        </th>
-                        <th className="px-3 py-2 text-left text-gray-600">
-                          Value
-                        </th>
-                        <th className="px-3 py-2 text-left text-gray-600">
-                          Unit
-                        </th>
-                        <th className="px-3 py-2 text-left text-gray-600">
-                          Page
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {categoryEvents.map((event) => (
-                        <tr key={event.event_id} className="hover:bg-gray-50">
-                          <td className="px-3 py-2 font-medium">
+                  <div className="space-y-2">
+                    {categoryEvents.map((event) => (
+                      <button
+                        key={event.event_id}
+                        type="button"
+                        onClick={() => setSelectedEvent(event)}
+                        className="w-full text-left p-3 rounded-lg bg-gray-50 hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-colors"
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-gray-900">
                             {event.analyte_name || event.biomarker_id}
-                          </td>
-                          <td className="px-3 py-2">
+                          </span>
+                          <span className="text-blue-600 font-semibold">
                             {event.value_normalized?.toFixed(2) ??
-                              event.value_original}
-                          </td>
-                          <td className="px-3 py-2">
-                            {event.unit_canonical ?? event.unit_original}
-                          </td>
-                          <td className="px-3 py-2">{event.page}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                              event.value_original}{" "}
+                            <span className="text-gray-500 font-normal text-sm">
+                              {event.unit_canonical ?? event.unit_original}
+                            </span>
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Page {event.page} · Tap for details
+                        </p>
+                      </button>
+                    ))}
+                  </div>
                 </CollapsiblePanel>
               ),
             )}
@@ -260,6 +390,14 @@ function DocumentDetail({ document, onClose, onDelete }: DocumentDetailProps) {
           </p>
         )}
       </div>
+
+      {/* Biomarker Detail Modal */}
+      {selectedEvent && (
+        <BiomarkerDetailModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
+      )}
     </div>
   );
 }
