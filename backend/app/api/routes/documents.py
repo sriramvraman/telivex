@@ -96,14 +96,25 @@ async def upload_document(
     event_repo = LabEventRepository(db)
     unmapped_repo = UnmappedRowRepository(db)
 
-    # Parse collected date
+    # Parse collected date: user-provided > extracted from PDF > current date
+    parsed_date = None
+    
     if collected_date:
+        # User provided date takes priority
         try:
             parsed_date = datetime.strptime(collected_date, "%Y-%m-%d")
         except ValueError:
-            parsed_date = datetime.utcnow()
-    else:
-        # Default to now if not provided
+            pass
+    
+    if not parsed_date and extraction_result.collected_date:
+        # Try to use date extracted from PDF
+        try:
+            parsed_date = datetime.strptime(extraction_result.collected_date, "%Y-%m-%d")
+        except ValueError:
+            pass
+    
+    if not parsed_date:
+        # Default to now if no date found
         parsed_date = datetime.utcnow()
 
     events_created = 0

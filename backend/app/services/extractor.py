@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -77,10 +78,130 @@ class PDFExtractor:
         r"ratio", r"index",
     ]
 
+    # Date extraction patterns - labels that precede collection/report dates
+    DATE_LABELS = [
+        r"collected?\s*(?:date|on)?",
+        r"collection\s*date",
+        r"sample\s*collected",
+        r"specimen\s*collected",
+        r"date\s*of\s*collection",
+        r"report(?:ed)?\s*(?:date|on)?",
+        r"date\s*of\s*report",
+        r"registered?\s*(?:date|on)?",
+        r"received?\s*(?:date|on)?",
+        r"date",
+    ]
+    
+    # Date format patterns (in order of preference)
+    DATE_FORMATS = [
+        # DD/MM/YYYY or DD-MM-YYYY (common in India)
+        (r"(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})", "%d/%m/%Y"),
+        # DD-Mon-YYYY (e.g., 15-Jan-2024)
+        (r"(\d{1,2})[/\-.\s]([A-Za-z]{3,9})[/\-.\s](\d{4})", "%d-%b-%Y"),
+        # Mon DD, YYYY (e.g., Jan 15, 2024)
+        (r"([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})", "%b %d %Y"),
+        # YYYY-MM-DD (ISO format)
+        (r"(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})", "%Y/%m/%d"),
+        # DD Mon YYYY (e.g., 15 Jan 2024)
+        (r"(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})", "%d %b %Y"),
+    ]
+
     def __init__(self):
         self.unit_regex = re.compile(
             r"(" + "|".join(self.UNIT_PATTERNS) + r")", re.IGNORECASE
         )
+        # Build combined date label pattern
+        self.date_label_regex = re.compile(
+            r"(?:" + "|".join(self.DATE_LABELS) + r")\s*:?\s*",
+            re.IGNORECASE
+        )
+
+    def _extract_date(self, text: str) -> Optional[str]:
+        """
+        Extract collection/report date from PDF text.
+        
+        Looks for common date labels followed by date values.
+        Returns date in YYYY-MM-DD format or None if not found.
+        """
+        if not text:
+            return None
+        
+        # First, try to find dates with labels (more reliable)
+        lines = text.split("\n")
+        for line in lines:
+            # Check if line contains a date label
+            label_match = self.date_label_regex.search(line)
+            if label_match:
+                # Extract the part after the label
+                after_label = line[label_match.end():]
+                parsed = self._parse_date_string(after_label)
+                if parsed:
+                    return parsed
+        
+        # If no labeled date found, try to find any date in the first few lines
+        # (usually report header contains the date)
+        header_text = "\n".join(lines[:20])  # First 20 lines
+        for pattern, _ in self.DATE_FORMATS:
+            match = re.search(pattern, header_text)
+            if match:
+                parsed = self._parse_date_string(match.group(0))
+                if parsed:
+                    return parsed
+        
+        return None
+
+    def _parse_date_string(self, date_str: str) -> Optional[str]:
+        """
+        Parse a date string and return YYYY-MM-DD format.
+        
+        Handles multiple date formats common in lab reports.
+        """
+        if not date_str:
+            return None
+        
+        date_str = date_str.strip()
+        
+        # Try each format pattern
+        for pattern, fmt in self.DATE_FORMATS:
+            match = re.search(pattern, date_str)
+            if match:
+                try:
+                    # Reconstruct the date string from the match
+                    matched_str = match.group(0)
+                    
+                    # Normalize separators for parsing
+                    normalized = re.sub(r"[/\-.]", "/", matched_str)
+                    normalized = re.sub(r"\s+", " ", normalized)
+                    normalized = normalized.replace(",", "")
+                    
+                    # Try to parse based on pattern type
+                    if "Mon" in fmt or "b" in fmt.lower():
+                        # Month name format - try multiple variations
+                        for try_fmt in ["%d/%b/%Y", "%d %b %Y", "%b %d %Y", "%d-%b-%Y"]:
+                            try:
+                                parsed = datetime.strptime(normalized, try_fmt)
+                                return parsed.strftime("%Y-%m-%d")
+                            except ValueError:
+                                continue
+                    else:
+                        # Numeric format
+                        parts = re.split(r"[/\-.\s]+", normalized)
+                        if len(parts) >= 3:
+                            # Determine if it's DMY or YMD
+                            if len(parts[0]) == 4:
+                                # YYYY-MM-DD
+                                year, month, day = int(parts[0]), int(parts[1]), int(parts[2])
+                            else:
+                                # DD-MM-YYYY (common in India)
+                                day, month, year = int(parts[0]), int(parts[1]), int(parts[2])
+                            
+                            # Validate
+                            if 1 <= month <= 12 and 1 <= day <= 31 and 1900 <= year <= 2100:
+                                return f"{year:04d}-{month:02d}-{day:02d}"
+                except (ValueError, IndexError):
+                    continue
+        
+        return None
 
     def extract(self, pdf_path: Path | str) -> ExtractionResult:
         """
@@ -108,6 +229,16 @@ class PDFExtractor:
             with pdfplumber.open(pdf_path) as pdf:
                 page_count = len(pdf.pages)
                 current_section: Optional[str] = None
+
+                # Try to extract date from first page text
+                if pdf.pages:
+                    first_page_text = pdf.pages[0].extract_text() or ""
+                    collected_date = self._extract_date(first_page_text)
+                    
+                    # If not found on first page, check second page
+                    if not collected_date and len(pdf.pages) > 1:
+                        second_page_text = pdf.pages[1].extract_text() or ""
+                        collected_date = self._extract_date(second_page_text)
 
                 for page_num, page in enumerate(pdf.pages, start=1):
                     # Extract tables from this page
