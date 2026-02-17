@@ -88,6 +88,30 @@ class Canonicalizer:
         "catalyse": "catalyze",
     }
 
+    # Panel/section synonyms - these are equivalent
+    PANEL_SYNONYMS = {
+        # CBC/Hematogram synonyms
+        "complete hemogram": "complete blood count",
+        "complete haemogram": "complete blood count",
+        "hemogram": "complete blood count",
+        "haemogram": "complete blood count",
+        "cbc": "complete blood count",
+        "full blood count": "complete blood count",
+        "fbc": "complete blood count",
+        "blood count": "complete blood count",
+        # Lipid panel synonyms
+        "lipid panel": "lipid profile",
+        "lipids": "lipid profile",
+        # Liver function
+        "lft": "liver function test",
+        "liver panel": "liver function test",
+        # Kidney function
+        "kft": "kidney function test",
+        "renal function test": "kidney function test",
+        "renal panel": "kidney function test",
+        "rft": "kidney function test",
+    }
+
     # Common abbreviation expansions
     ABBREVIATIONS = {
         "hb": "hemoglobin",
@@ -209,6 +233,24 @@ class Canonicalizer:
         "count",
     ]
 
+    def _normalize_section(self, section: Optional[str]) -> Optional[str]:
+        """Normalize section name using panel synonyms."""
+        if not section:
+            return None
+        
+        section_lower = section.lower().strip()
+        
+        # Apply spelling variants first
+        for british, american in self.SPELLING_VARIANTS.items():
+            section_lower = section_lower.replace(british, american)
+        
+        # Check for panel synonyms
+        for synonym, canonical in self.PANEL_SYNONYMS.items():
+            if synonym in section_lower:
+                return canonical
+        
+        return section_lower
+
     def _get_section_qualifier(self, section: Optional[str]) -> Optional[str]:
         """
         Determine if section indicates differential or absolute count.
@@ -219,6 +261,10 @@ class Canonicalizer:
             return None
         
         section_lower = section.lower()
+        
+        # Normalize British spellings
+        for british, american in self.SPELLING_VARIANTS.items():
+            section_lower = section_lower.replace(british, american)
         
         for indicator in self.DIFFERENTIAL_INDICATORS:
             if indicator in section_lower:
