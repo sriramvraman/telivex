@@ -1,0 +1,16 @@
+{
+  "_comment": "Deterministic mapping: panel_seed → category. No ML, no guessing.",
+  "mapping": {
+    "Cancer Marker": "Oncology",
+    "Complete Haemogram": "Hematology",
+    "Fasting Blood Sugar": "Metabolic",
+    "Hba1c": "Metabolic",
+    "Kidney Function Test 1": "Renal",
+    "Lipid Profile": "Lipids",
+    "Liver Function Test": "Liver",
+    "Testosterone": "Endocrine",
+    "Thyroid Profile": "Endocrine",
+    "Vitamin B12": "Vitamins",
+    "Vitamin D": "Vitamins"
+  }
+}

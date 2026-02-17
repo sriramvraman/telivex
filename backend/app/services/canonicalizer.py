@@ -4,14 +4,41 @@ Canonicalization service - matches raw labels to biomarker registry.
 Key principle: NEVER invent biomarker_ids. If no match found, surface as unmapped.
 """
 
+import json
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import BiomarkerRegistry
+
+
+# Load panel → category mapping (deterministic, no ML)
+_PANEL_CATEGORY_MAP_PATH = Path(__file__).parent.parent.parent / "data" / "panel_category_map.json"
+_PANEL_CATEGORY_MAP: dict[str, str] = {}
+
+def _load_panel_category_map() -> dict[str, str]:
+    """Load the panel_seed → category mapping from JSON file."""
+    global _PANEL_CATEGORY_MAP
+    if not _PANEL_CATEGORY_MAP:
+        try:
+            with open(_PANEL_CATEGORY_MAP_PATH, "r") as f:
+                data = json.load(f)
+                _PANEL_CATEGORY_MAP = data.get("mapping", {})
+        except (FileNotFoundError, json.JSONDecodeError):
+            _PANEL_CATEGORY_MAP = {}
+    return _PANEL_CATEGORY_MAP
+
+
+def get_category_for_panel(panel_seed: Optional[str]) -> Optional[str]:
+    """Get category for a panel_seed using deterministic mapping."""
+    if not panel_seed:
+        return None
+    mapping = _load_panel_category_map()
+    return mapping.get(panel_seed)
 
 
 @dataclass
@@ -22,6 +49,8 @@ class CanonicalMatch:
     analyte_name: str
     canonical_unit: str
     confidence: float  # 1.0 = exact match, lower for fuzzy
+    category: Optional[str] = None  # Derived from panel_seed → category mapping
+    panel_seed: Optional[str] = None  # Original panel_seed from registry
 
 
 @dataclass
@@ -532,6 +561,7 @@ class Canonicalizer:
         for attempt, confidence in attempts:
             if attempt in self._alias_map:
                 biomarker = self._alias_map[attempt]
+                category = get_category_for_panel(biomarker.panel_seed)
                 return CanonicalResult(
                     matched=True,
                     match=CanonicalMatch(
@@ -539,6 +569,8 @@ class Canonicalizer:
                         analyte_name=biomarker.analyte_name,
                         canonical_unit=biomarker.canonical_unit,
                         confidence=confidence,
+                        category=category,
+                        panel_seed=biomarker.panel_seed,
                     ),
                     raw_label=raw_label,
                     section=section,
