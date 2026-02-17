@@ -29,6 +29,7 @@ class LabEventRepository:
         panel_name: Optional[str] = None,
         lab_name: Optional[str] = None,
         confidence: float = 1.0,
+        flag: Optional[str] = None,
     ) -> LabEvent:
         """Create a new lab event from PDF extraction."""
         event = LabEvent(
@@ -45,6 +46,7 @@ class LabEventRepository:
             lab_name=lab_name,
             confidence=confidence,
             source_type="pdf_extraction",
+            flag=flag,
         )
         self.db.add(event)
         return event

@@ -106,6 +106,9 @@ class LabEvent(Base):
     source_type: Mapped[str] = mapped_column(
         String(50), default="pdf_extraction"
     )  # pdf_extraction, manual_entry, import
+    
+    # Abnormal flag from lab report: 'H' (high), 'L' (low), or null (normal/not specified)
+    flag: Mapped[Optional[str]] = mapped_column(String(1))
 
     # Audit
     created_at: Mapped[datetime] = mapped_column(

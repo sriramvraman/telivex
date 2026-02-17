@@ -169,6 +169,7 @@ async def upload_document(
             page=row.page,
             lab_name=lab_name,
             confidence=canon_result.match.confidence,
+            flag=row.flag,
         )
         events_created += 1
 
@@ -258,6 +259,7 @@ def get_document_events(
             unit_original=event.unit_original,
             page=event.page,
             confidence=event.confidence,
+            flag=event.flag,
         )
         for event in events
     ]

@@ -80,6 +80,7 @@ class LabEventResponse(BaseModel):
     unit_original: str
     page: Optional[int]
     confidence: float
+    flag: Optional[str] = None  # 'H' (high), 'L' (low), or null (normal)
 
     model_config = {"from_attributes": True}
 
