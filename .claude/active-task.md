@@ -1,45 +1,51 @@
 # Active Task
 
 ## Current Task
-**Phase 1B: PDF Extraction Pipeline**
+**Phase 1B: PDF Extraction Pipeline** 🚧 IN PROGRESS
 
 ### Description
 Implement the core PDF processing pipeline: upload, extract tables, canonicalize biomarkers, normalize units, and create LabEvents with full provenance.
 
 ### Acceptance Criteria
-- [ ] PDF upload endpoint (`POST /api/v1/documents/upload`)
-- [ ] Document stored with metadata (filename, upload_date, page_count)
-- [ ] pdfplumber table extraction service
-- [ ] Canonicalization service (match raw labels → registry biomarker_ids using aliases)
-- [ ] Unit normalization service (deterministic conversion tables)
-- [ ] LabEvent creation with provenance (document_id, page, row_index)
-- [ ] UnmappedRow surfacing (rows that couldn't be matched)
-- [ ] GET endpoint to list unmapped rows for review
+- [x] PDF upload endpoint (`POST /api/v1/documents/upload`)
+- [x] Document stored with metadata (filename, upload_date, page_count, file_hash)
+- [x] pdfplumber table extraction service
+- [x] Canonicalization service (match raw labels → registry biomarker_ids using aliases)
+- [x] Unit normalization service (deterministic conversion tables)
+- [x] LabEvent creation with provenance (document_id, page, row_index)
+- [x] UnmappedRow surfacing (rows that couldn't be matched)
+- [x] GET endpoint to list unmapped rows for review
+- [ ] **PENDING: Integration test with real PDF**
+- [ ] **PENDING: Verify database migrations work**
 
-### Files to Modify/Create
-- `backend/app/api/v1/documents.py` - Upload endpoint
-- `backend/app/services/extractor.py` - PDF table extraction
-- `backend/app/services/canonicalizer.py` - Biomarker matching
-- `backend/app/services/normalizer.py` - Unit conversion
+### Files Created
+- `backend/app/api/routes/documents.py` - Upload and retrieval endpoints
+- `backend/app/services/extractor.py` - PDF table extraction with pdfplumber
+- `backend/app/services/canonicalizer.py` - Biomarker matching against registry
+- `backend/app/services/normalizer.py` - Unit conversion (deterministic)
 - `backend/app/repositories/document_repo.py` - Document CRUD
-- `backend/app/repositories/lab_event_repo.py` - LabEvent CRUD
+- `backend/app/repositories/lab_event_repo.py` - LabEvent & UnmappedRow CRUD
 - `backend/app/schemas/document.py` - Request/response schemas
 
-### Verification Commands
+### Verification Commands (TO RUN)
 ```bash
-# Lint
-cd backend && ruff check app/ && ruff format --check app/
+# 1. Ensure DB is running
+docker compose up -d
 
-# Type check
-cd backend && mypy app/
+# 2. Run migrations
+cd backend && source .venv/bin/activate && alembic upgrade head
 
-# Test upload with sample PDF
-curl -X POST -F "file=@sample.pdf" http://localhost:8001/api/v1/documents/upload
+# 3. Start API
+uvicorn app.main:app --reload --port 8001
 
-# Check extracted events
+# 4. Test upload (need a sample PDF)
+curl -X POST -F "file=@sample_lab_report.pdf" \
+  "http://localhost:8001/api/v1/documents/upload?collected_date=2026-01-15"
+
+# 5. Check extracted events
 curl http://localhost:8001/api/v1/documents/{id}/events
 
-# Check unmapped rows
+# 6. Check unmapped rows
 curl http://localhost:8001/api/v1/documents/{id}/unmapped
 ```
 
@@ -50,4 +56,4 @@ curl http://localhost:8001/api/v1/documents/{id}/unmapped
 | Date | Task | Status |
 |------|------|--------|
 | 2026-02-17 | Phase 1A: Foundation | ✅ Complete |
-| 2026-02-17 | Phase 1B: PDF Extraction Pipeline | 🚧 In Progress |
+| 2026-02-17 | Phase 1B: PDF Extraction Pipeline | 🚧 Code complete, needs testing |
