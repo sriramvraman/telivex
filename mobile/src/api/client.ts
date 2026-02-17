@@ -95,6 +95,23 @@ class TelivexApiClient {
     );
   }
 
+  async deleteDocument(documentId: string): Promise<void> {
+    const url = `${this.baseUrl}/documents/${documentId}`;
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        detail: `HTTP ${response.status}: ${response.statusText}`,
+      }));
+      throw new Error(error.detail || "Failed to delete document");
+    }
+  }
+
   // Biomarker endpoints
   async listBiomarkers(
     category?: string,

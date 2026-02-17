@@ -26,6 +26,8 @@ export interface Biomarker {
 export interface LabEvent {
   event_id: string;
   biomarker_id: string;
+  analyte_name: string;
+  category: string | null;
   document_id: string;
   collected_at: string;
   value_original: number;

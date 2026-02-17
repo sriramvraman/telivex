@@ -27,6 +27,7 @@ export interface LabEventResponse {
   event_id: string;
   biomarker_id: string;
   analyte_name: string;
+  category: string | null;
   collected_at: string; // ISO datetime
   value_normalized: number;
   unit_canonical: string;

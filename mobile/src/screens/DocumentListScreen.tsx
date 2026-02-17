@@ -1,8 +1,8 @@
 /**
- * Document List Screen - Shows all uploaded lab documents.
+ * Document List Screen - Shows all uploaded lab documents with delete option.
  */
 
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,10 +11,12 @@ import {
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
+  Alert,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useDocuments } from "../hooks";
+import { apiClient } from "../api/client";
 import type { RootStackParamList, DocumentResponse } from "../types";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "DocumentList">;
@@ -23,9 +25,37 @@ export function DocumentListScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { documents, loading, error, fetchDocuments } = useDocuments();
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [fetchDocuments]);
+  // Refresh documents when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchDocuments();
+    }, [fetchDocuments]),
+  );
+
+  const handleDeleteDocument = async (doc: DocumentResponse) => {
+    Alert.alert(
+      "Delete Document",
+      `Delete "${doc.filename}"? This will remove all extracted data and cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await apiClient.deleteDocument(doc.document_id);
+              fetchDocuments(); // Refresh the list
+            } catch (err) {
+              Alert.alert(
+                "Error",
+                err instanceof Error ? err.message : "Failed to delete document",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const renderDocument = ({ item }: { item: DocumentResponse }) => {
     const uploadDate = new Date(item.uploaded_at).toLocaleDateString();
@@ -36,11 +66,21 @@ export function DocumentListScreen() {
         onPress={() =>
           navigation.navigate("DocumentDetail", { documentId: item.document_id })
         }
+        onLongPress={() => handleDeleteDocument(item)}
       >
         <View style={styles.documentHeader}>
-          <Text style={styles.documentName} numberOfLines={1}>
-            {item.filename}
-          </Text>
+          <View style={styles.documentTitleRow}>
+            <Text style={styles.documentName} numberOfLines={1}>
+              {item.filename}
+            </Text>
+            <TouchableOpacity
+              style={styles.deleteIcon}
+              onPress={() => handleDeleteDocument(item)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text style={styles.deleteIconText}>🗑️</Text>
+            </TouchableOpacity>
+          </View>
           <Text style={styles.documentDate}>{uploadDate}</Text>
         </View>
 
@@ -104,6 +144,13 @@ export function DocumentListScreen() {
             </Text>
           </View>
         }
+        ListHeaderComponent={
+          documents.length > 0 ? (
+            <Text style={styles.hintText}>
+              Long-press or tap 🗑️ to delete a document
+            </Text>
+          ) : null
+        }
       />
 
       <TouchableOpacity
@@ -153,6 +200,12 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100,
   },
+  hintText: {
+    fontSize: 12,
+    color: "#9ca3af",
+    textAlign: "center",
+    marginBottom: 12,
+  },
   documentCard: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -165,10 +218,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   documentHeader: {
+    marginBottom: 12,
+  },
+  documentTitleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
   },
   documentName: {
     fontSize: 16,
@@ -177,9 +232,16 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
   },
+  deleteIcon: {
+    padding: 4,
+  },
+  deleteIconText: {
+    fontSize: 16,
+  },
   documentDate: {
     fontSize: 14,
     color: "#6b7280",
+    marginTop: 4,
   },
   documentStats: {
     flexDirection: "row",

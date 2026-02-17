@@ -239,6 +239,7 @@ def get_document_events(
             event_id=event.event_id,
             biomarker_id=event.biomarker_id,
             analyte_name=event.biomarker.analyte_name,
+            category=event.biomarker.category,
             collected_at=event.collected_at,
             value_normalized=event.value_normalized,
             unit_canonical=event.unit_canonical,

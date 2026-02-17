@@ -84,6 +84,20 @@ export async function getDocumentUnmappedRows(
   return handleResponse<UnmappedRow[]>(response);
 }
 
+/** Delete a document and all associated data */
+export async function deleteDocument(documentId: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/documents/${documentId}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    throw new ApiError(
+      errorBody.detail || `HTTP ${response.status}`,
+      response.status,
+    );
+  }
+}
+
 // ============ Biomarker Endpoints ============
 
 /** List all biomarkers in the registry */

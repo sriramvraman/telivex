@@ -72,6 +72,7 @@ class LabEventResponse(BaseModel):
     event_id: str
     biomarker_id: str
     analyte_name: str
+    category: Optional[str] = None
     collected_at: datetime
     value_normalized: float
     unit_canonical: str

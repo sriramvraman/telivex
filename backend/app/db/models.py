@@ -59,9 +59,13 @@ class Document(Base):
     file_hash: Mapped[Optional[str]] = mapped_column(String(64))  # SHA-256
     metadata_json: Mapped[Optional[dict]] = mapped_column(JSONB)
 
-    # Relationships
-    lab_events: Mapped[list["LabEvent"]] = relationship(back_populates="document")
-    unmapped_rows: Mapped[list["UnmappedRow"]] = relationship(back_populates="document")
+    # Relationships - cascade delete events and unmapped rows when document is deleted
+    lab_events: Mapped[list["LabEvent"]] = relationship(
+        back_populates="document", cascade="all, delete-orphan"
+    )
+    unmapped_rows: Mapped[list["UnmappedRow"]] = relationship(
+        back_populates="document", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Document {self.document_id}: {self.filename}>"
