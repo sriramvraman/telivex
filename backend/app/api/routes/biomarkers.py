@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models import BiomarkerRegistry
 from app.schemas.biomarker import BiomarkerResponse, BiomarkerListResponse
+from app.services.canonicalizer import get_category_for_panel, _load_panel_category_map
 
 router = APIRouter(prefix="/biomarkers", tags=["biomarkers"])
 
@@ -36,15 +37,11 @@ def list_biomarkers(
 
 
 @router.get("/categories")
-def list_categories(db: Session = Depends(get_db)):
-    """List all unique biomarker categories."""
-    categories = (
-        db.query(BiomarkerRegistry.category)
-        .distinct()
-        .filter(BiomarkerRegistry.category.isnot(None))
-        .all()
-    )
-    return {"categories": [c[0] for c in categories]}
+def list_categories():
+    """List all unique biomarker categories from the panel_seed → category mapping."""
+    mapping = _load_panel_category_map()
+    categories = sorted(set(mapping.values()))
+    return {"categories": categories}
 
 
 @router.get("/{biomarker_id}", response_model=BiomarkerResponse)

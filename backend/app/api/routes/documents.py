@@ -18,7 +18,7 @@ from app.schemas.document import (
     LabEventResponse,
     UnmappedRowResponse,
 )
-from app.services.canonicalizer import Canonicalizer
+from app.services.canonicalizer import Canonicalizer, get_category_for_panel
 from app.services.extractor import PDFExtractor
 from app.services.normalizer import UnitNormalizer
 
@@ -250,7 +250,7 @@ def get_document_events(
             event_id=event.event_id,
             biomarker_id=event.biomarker_id,
             analyte_name=event.biomarker.analyte_name,
-            category=event.biomarker.category,
+            category=get_category_for_panel(event.biomarker.panel_seed),
             collected_at=event.collected_at,
             value_normalized=event.value_normalized,
             unit_canonical=event.unit_canonical,

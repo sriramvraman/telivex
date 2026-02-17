@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models import BiomarkerRegistry
 from app.repositories.lab_event_repo import LabEventRepository
+from app.services.canonicalizer import get_category_for_panel
 
 router = APIRouter(prefix="/biomarkers", tags=["trends"])
 
@@ -99,7 +100,7 @@ def get_biomarker_trend(
         biomarker_id=biomarker.biomarker_id,
         analyte_name=biomarker.analyte_name,
         canonical_unit=biomarker.canonical_unit,
-        category=biomarker.category,
+        category=get_category_for_panel(biomarker.panel_seed),
         total_points=len(points),
         points=points,
     )
