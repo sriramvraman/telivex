@@ -35,6 +35,8 @@ web/dist/
 web/build/
 mobile/ios/build/
 mobile/android/app/build/
+mobile/.expo/
+mobile/dist/
 
 # IDE
 .idea/
