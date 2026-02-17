@@ -77,3 +77,4 @@ logs/
 *.pem
 *.key
 secrets/
+backend/uploads/*.pdf

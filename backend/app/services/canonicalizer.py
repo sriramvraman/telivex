@@ -31,6 +31,7 @@ class CanonicalResult:
     matched: bool
     match: Optional[CanonicalMatch]
     raw_label: str
+    section: Optional[str] = None  # Section context used for matching
 
 
 class Canonicalizer:
@@ -190,18 +191,104 @@ class Canonicalizer:
                     return self.ABBREVIATIONS[clean_word]
         return text
 
-    def canonicalize(self, raw_label: str) -> CanonicalResult:
+    # Section keywords that indicate differential (percentage) counts
+    DIFFERENTIAL_INDICATORS = [
+        "differential",
+        "differential leucocyte",
+        "differential leukocyte", 
+        "dlc",
+        "percentage",
+    ]
+    
+    # Section keywords that indicate absolute counts
+    ABSOLUTE_INDICATORS = [
+        "absolute",
+        "absolute leucocyte",
+        "absolute leukocyte",
+        "alc",
+        "count",
+    ]
+
+    def _get_section_qualifier(self, section: Optional[str]) -> Optional[str]:
+        """
+        Determine if section indicates differential or absolute count.
+        
+        Returns 'differential', 'absolute', or None.
+        """
+        if not section:
+            return None
+        
+        section_lower = section.lower()
+        
+        for indicator in self.DIFFERENTIAL_INDICATORS:
+            if indicator in section_lower:
+                return "differential"
+        
+        for indicator in self.ABSOLUTE_INDICATORS:
+            if indicator in section_lower:
+                return "absolute"
+        
+        return None
+
+    def _build_section_aware_labels(self, label: str, section: Optional[str]) -> list[tuple[str, float]]:
+        """
+        Build labels that incorporate section context.
+        
+        For a label like "Neutrophils" in section "Differential Leucocyte Count":
+        - "neutrophils differential"
+        - "neutrophils differential pct"
+        - "differential neutrophils"
+        
+        Returns list of (label, confidence) tuples.
+        """
+        results = []
+        qualifier = self._get_section_qualifier(section)
+        
+        if not qualifier:
+            return results
+        
+        normalized = self._normalize(label)
+        
+        # Common patterns for differential vs absolute
+        if qualifier == "differential":
+            results.extend([
+                (f"{normalized} differential", 0.98),
+                (f"{normalized} differential pct", 0.97),
+                (f"{normalized} percent", 0.96),
+                (f"differential {normalized}", 0.95),
+                (f"{normalized} pct", 0.94),
+            ])
+        elif qualifier == "absolute":
+            results.extend([
+                (f"{normalized} absolute", 0.98),
+                (f"{normalized} absolute count", 0.97),
+                (f"absolute {normalized}", 0.96),
+                (f"absolute {normalized} count", 0.95),
+                (f"{normalized} count", 0.94),
+            ])
+        
+        return results
+
+    def canonicalize(self, raw_label: str, section: Optional[str] = None) -> CanonicalResult:
         """
         Attempt to match a raw label to the biomarker registry.
+        
+        Args:
+            raw_label: The test name from the lab report
+            section: Optional section context (e.g., "Differential Leucocyte Count")
 
         Returns:
             CanonicalResult with match info or unmatched status
         """
         if not raw_label or not raw_label.strip():
-            return CanonicalResult(matched=False, match=None, raw_label=raw_label)
+            return CanonicalResult(matched=False, match=None, raw_label=raw_label, section=section)
 
         # Try progressively more aggressive normalization
         attempts = []
+
+        # 0. Section-aware labels first (highest priority for disambiguation)
+        section_labels = self._build_section_aware_labels(raw_label, section)
+        attempts.extend(section_labels)
 
         # 1. Basic normalization
         normalized = self._normalize(raw_label)
@@ -241,10 +328,11 @@ class Canonicalizer:
                         confidence=confidence,
                     ),
                     raw_label=raw_label,
+                    section=section,
                 )
 
         # No match found - do NOT guess
-        return CanonicalResult(matched=False, match=None, raw_label=raw_label)
+        return CanonicalResult(matched=False, match=None, raw_label=raw_label, section=section)
 
     def _generate_variants(self, normalized: str) -> list[str]:
         """Generate variants of the label to try matching."""
