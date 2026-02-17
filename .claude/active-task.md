@@ -51,9 +51,35 @@ curl http://localhost:8001/api/v1/documents/{id}/unmapped
 
 ---
 
+## Phase 1C: Trend & Event Endpoints ✅ COMPLETE
+
+### Description
+Add remaining API endpoints for Phase 1 MVP: trend queries and LabEvent CRUD.
+
+### Acceptance Criteria
+- [x] `GET /api/v1/biomarkers/{id}/trend` - Time series with date filtering
+- [x] `GET /api/v1/biomarkers/{id}/summary` - Aggregate stats (min/max/avg/latest)
+- [x] `GET /api/v1/events` - List events with filtering
+- [x] `GET /api/v1/events/{id}` - Get single event
+- [x] `POST /api/v1/events` - Manual event creation
+- [x] `POST /api/v1/events/{id}/correct` - Correction (append-only via supersedes)
+- [x] `GET /api/v1/events/{id}/history` - Correction chain
+
+### Files Created/Modified
+- `backend/app/api/routes/trends.py` - Trend query endpoints
+- `backend/app/api/routes/events.py` - LabEvent CRUD endpoints
+- `backend/app/repositories/lab_event_repo.py` - Extended with trend/correction methods
+- `backend/app/main.py` - Route registration
+
+### Committed
+`669d510` feat(api): add trend and event endpoints for Phase 1 MVP
+
+---
+
 ## Task History
 
 | Date | Task | Status |
 |------|------|--------|
 | 2026-02-17 | Phase 1A: Foundation | ✅ Complete |
 | 2026-02-17 | Phase 1B: PDF Extraction Pipeline | 🚧 Code complete, needs testing |
+| 2026-02-17 | Phase 1C: Trend & Event Endpoints | ✅ Complete |

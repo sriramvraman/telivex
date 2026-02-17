@@ -136,8 +136,8 @@ class UnmappedRow(Base):
     )
 
     # Raw extracted data
-    raw_label: Mapped[str] = mapped_column(String(500), nullable=False)
-    raw_value: Mapped[Optional[str]] = mapped_column(String(100))
+    raw_label: Mapped[str] = mapped_column(Text, nullable=False)
+    raw_value: Mapped[Optional[str]] = mapped_column(Text)
     raw_unit: Mapped[Optional[str]] = mapped_column(String(50))
     page: Mapped[Optional[int]] = mapped_column(Integer)
 

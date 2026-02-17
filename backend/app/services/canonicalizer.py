@@ -44,6 +44,86 @@ class Canonicalizer:
     - No match → return unmatched, never guess
     """
 
+    # Method descriptors to strip from labels (often appended in lab reports)
+    METHOD_DESCRIPTORS = [
+        "colorimetric",
+        "calculated",
+        "electrical impedance",
+        "flow cytometry",
+        "photometry",
+        "enzymatic",
+        "immunoturbidimetric",
+        "turbidimetric",
+        "nephelometric",
+        "ion selective electrode",
+        "double indicator",
+        "ion exchange",
+        "spectrophotometry",
+        "kinetic",
+        "reflotron",
+        "automated",
+        "manual",
+    ]
+
+    # British to American spelling mappings
+    SPELLING_VARIANTS = {
+        "haemoglobin": "hemoglobin",
+        "haematocrit": "hematocrit",
+        "haemogram": "hemogram",
+        "colour": "color",
+        "foetal": "fetal",
+        "oestrogen": "estrogen",
+        "leucocyte": "leukocyte",
+        "anaemia": "anemia",
+        "diarrhoea": "diarrhea",
+        "oedema": "edema",
+        "tumour": "tumor",
+        "behaviour": "behavior",
+        "favour": "favor",
+        "honour": "honor",
+        "labour": "labor",
+        "neighbour": "neighbor",
+        "analyse": "analyze",
+        "catalyse": "catalyze",
+    }
+
+    # Common abbreviation expansions
+    ABBREVIATIONS = {
+        "hb": "hemoglobin",
+        "hgb": "hemoglobin",
+        "rbc": "red blood cell",
+        "wbc": "white blood cell",
+        "plt": "platelet",
+        "mcv": "mean corpuscular volume",
+        "mch": "mean corpuscular hemoglobin",
+        "mchc": "mean corpuscular hemoglobin concentration",
+        "rdw": "red cell distribution width",
+        "pcv": "packed cell volume",
+        "esr": "erythrocyte sedimentation rate",
+        "crp": "c-reactive protein",
+        "ldl": "low density lipoprotein",
+        "hdl": "high density lipoprotein",
+        "vldl": "very low density lipoprotein",
+        "tsh": "thyroid stimulating hormone",
+        "t3": "triiodothyronine",
+        "t4": "thyroxine",
+        "ft3": "free triiodothyronine",
+        "ft4": "free thyroxine",
+        "alt": "alanine aminotransferase",
+        "ast": "aspartate aminotransferase",
+        "alp": "alkaline phosphatase",
+        "ggt": "gamma glutamyl transferase",
+        "bun": "blood urea nitrogen",
+        "egfr": "estimated glomerular filtration rate",
+        "hba1c": "glycated hemoglobin",
+        "psa": "prostate specific antigen",
+        "bnp": "brain natriuretic peptide",
+        "ck": "creatine kinase",
+        "ldh": "lactate dehydrogenase",
+        "mpv": "mean platelet volume",
+        "pdw": "platelet distribution width",
+    }
+
     def __init__(self, db: Session):
         self.db = db
         self._alias_map: dict[str, BiomarkerRegistry] = {}
@@ -72,14 +152,43 @@ class Canonicalizer:
             return ""
         # Lowercase
         result = text.lower().strip()
+        # Replace newlines with spaces
+        result = result.replace("\n", " ").replace("\r", " ")
         # Remove extra whitespace
         result = re.sub(r"\s+", " ", result)
-        # Remove parenthetical content for matching (but not the whole thing)
-        # e.g., "Hemoglobin (Hb)" → "hemoglobin"
+        # Remove parenthetical content for matching
         result_no_parens = re.sub(r"\s*\([^)]*\)\s*", " ", result).strip()
         if result_no_parens:
             result = result_no_parens
+        # Remove trailing asterisks and flags
+        result = re.sub(r"\s*\*+\s*$", "", result)
+        return result.strip()
+
+    def _strip_method_descriptors(self, text: str) -> str:
+        """Remove method descriptors from label."""
+        result = text.lower()
+        for method in self.METHOD_DESCRIPTORS:
+            # Remove method as standalone word or after newline/space
+            result = re.sub(rf"\b{method}\b", "", result, flags=re.IGNORECASE)
+        return result.strip()
+
+    def _normalize_spelling(self, text: str) -> str:
+        """Normalize British to American spelling."""
+        result = text.lower()
+        for british, american in self.SPELLING_VARIANTS.items():
+            result = result.replace(british, american)
         return result
+
+    def _expand_abbreviation(self, text: str) -> str:
+        """Expand common abbreviations."""
+        # Only expand if the text is primarily an abbreviation
+        words = text.lower().split()
+        if len(words) <= 2:
+            for word in words:
+                clean_word = re.sub(r"[^a-z0-9]", "", word)
+                if clean_word in self.ABBREVIATIONS:
+                    return self.ABBREVIATIONS[clean_word]
+        return text
 
     def canonicalize(self, raw_label: str) -> CanonicalResult:
         """
@@ -91,34 +200,45 @@ class Canonicalizer:
         if not raw_label or not raw_label.strip():
             return CanonicalResult(matched=False, match=None, raw_label=raw_label)
 
+        # Try progressively more aggressive normalization
+        attempts = []
+
+        # 1. Basic normalization
         normalized = self._normalize(raw_label)
+        attempts.append((normalized, 1.0))
 
-        # Try exact match on normalized form
-        if normalized in self._alias_map:
-            biomarker = self._alias_map[normalized]
-            return CanonicalResult(
-                matched=True,
-                match=CanonicalMatch(
-                    biomarker_id=biomarker.biomarker_id,
-                    analyte_name=biomarker.analyte_name,
-                    canonical_unit=biomarker.canonical_unit,
-                    confidence=1.0,
-                ),
-                raw_label=raw_label,
-            )
+        # 2. Strip method descriptors
+        stripped = self._normalize(self._strip_method_descriptors(raw_label))
+        if stripped and stripped != normalized:
+            attempts.append((stripped, 0.95))
 
-        # Try matching without common prefixes/suffixes
-        variants = self._generate_variants(normalized)
-        for variant in variants:
-            if variant in self._alias_map:
-                biomarker = self._alias_map[variant]
+        # 3. Normalize spelling (British → American)
+        american = self._normalize_spelling(stripped or normalized)
+        if american and american != stripped:
+            attempts.append((american, 0.93))
+
+        # 4. Try abbreviation expansion
+        expanded = self._expand_abbreviation(stripped or normalized)
+        if expanded and expanded != stripped:
+            attempts.append((self._normalize(expanded), 0.90))
+
+        # 5. Generate additional variants
+        for base, base_conf in list(attempts):
+            for variant in self._generate_variants(base):
+                if variant not in [a[0] for a in attempts]:
+                    attempts.append((variant, base_conf * 0.95))
+
+        # Try each attempt
+        for attempt, confidence in attempts:
+            if attempt in self._alias_map:
+                biomarker = self._alias_map[attempt]
                 return CanonicalResult(
                     matched=True,
                     match=CanonicalMatch(
                         biomarker_id=biomarker.biomarker_id,
                         analyte_name=biomarker.analyte_name,
                         canonical_unit=biomarker.canonical_unit,
-                        confidence=0.95,
+                        confidence=confidence,
                     ),
                     raw_label=raw_label,
                 )
@@ -137,7 +257,7 @@ class Canonicalizer:
                 variants.append(normalized[len(prefix) :])
 
         # Remove common suffixes
-        suffixes = [" level", " levels", " count", " test", " assay"]
+        suffixes = [" level", " levels", " count", " test", " assay", " value"]
         for suffix in suffixes:
             if normalized.endswith(suffix):
                 variants.append(normalized[: -len(suffix)])
@@ -146,6 +266,11 @@ class Canonicalizer:
         no_special = re.sub(r"[^a-z0-9\s]", "", normalized)
         if no_special != normalized:
             variants.append(no_special)
+
+        # Try extracting just the main term (first word or words before special chars)
+        main_term = normalized.split()[0] if normalized.split() else ""
+        if main_term and len(main_term) > 2 and main_term != normalized:
+            variants.append(main_term)
 
         return variants
 
