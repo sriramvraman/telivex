@@ -274,22 +274,64 @@ class PDFExtractor:
         
         return label
 
+    # Words/phrases that indicate non-data rows (interpretation, comments, etc.)
+    SKIP_LABELS = {
+        # Headers
+        "test", "test name", "parameter", "analyte", "result", "value",
+        "unit", "units", "reference", "normal range", "specimen",
+        # Interpretation/commentary
+        "interpretation", "impression", "comment", "comments", "note", "notes",
+        "remark", "remarks", "observation", "observations", "suggestion",
+        "suggestions", "advice", "recommendation", "recommendations",
+        "clinical correlation", "clinical significance", "please correlate",
+        "clinically", "advised", "suggest", "indicates", "indicative",
+        # Section markers
+        "end of report", "report end", "verified by", "reported by",
+        "authorized by", "checked by", "technician", "pathologist",
+        "dr.", "doctor", "md", "mbbs",
+    }
+    
+    # Patterns that indicate interpretation text (partial matches)
+    SKIP_PATTERNS = [
+        r"interpretation\s*:",
+        r"impression\s*:",
+        r"comment\s*:",
+        r"note\s*:",
+        r"^\s*-+\s*$",  # Just dashes
+        r"^\s*\*+\s*$",  # Just asterisks
+        r"please\s+(correlate|consult|see)",
+        r"(within|outside)\s+normal\s+(limits|range)",
+        r"values?\s+(are|is)\s+(normal|abnormal|high|low)",
+        r"no\s+significant",
+        r"(suggest|advised|recommend)",
+        r"report\s+(verified|authorized|checked)",
+        r"electronically\s+(signed|verified)",
+    ]
+
     def _is_header_row(self, label: str) -> bool:
-        """Check if this looks like a header row."""
-        header_words = {
-            "test",
-            "test name",
-            "parameter",
-            "analyte",
-            "result",
-            "value",
-            "unit",
-            "units",
-            "reference",
-            "normal range",
-            "specimen",
-        }
-        return label.lower() in header_words
+        """Check if this looks like a header or interpretation row to skip."""
+        label_lower = label.lower().strip()
+        
+        # Exact match skip
+        if label_lower in self.SKIP_LABELS:
+            return True
+        
+        # Check for any skip label as a substring at the start
+        for skip_word in self.SKIP_LABELS:
+            if label_lower.startswith(skip_word):
+                return True
+        
+        # Pattern-based skip
+        for pattern in self.SKIP_PATTERNS:
+            if re.search(pattern, label_lower):
+                return True
+        
+        # Skip if label is too long (likely interpretation text)
+        # Lab test names are typically < 50 chars
+        if len(label) > 80:
+            return True
+        
+        return False
 
     def _looks_like_value(self, cell: str) -> bool:
         """Check if cell looks like a numeric value."""
