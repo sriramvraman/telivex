@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: telivex-db
+    environment:
+      POSTGRES_USER: telivex
+      POSTGRES_PASSWORD: telivex_dev
+      POSTGRES_DB: telivex
+    ports:
+      - "5433:5432"
+    volumes:
+      - telivex_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U telivex -d telivex"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  telivex_pgdata:
