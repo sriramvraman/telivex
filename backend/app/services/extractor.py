@@ -272,6 +272,10 @@ class PDFExtractor:
                                 current_section = " ".join(current_section.split())
                                 continue
 
+                            # Skip rows in interpretation sections
+                            if current_section and self._is_interpretation_section(current_section):
+                                continue
+
                             extracted = self._parse_row(row, page_num, row_idx, current_section)
                             if extracted:
                                 rows.append(extracted)
@@ -286,6 +290,25 @@ class PDFExtractor:
             collected_date=collected_date,
             errors=errors,
         )
+
+    def _is_interpretation_section(self, section: str) -> bool:
+        """Check if the current section is an interpretation/commentary section."""
+        if not section:
+            return False
+        section_lower = section.lower()
+        interpretation_markers = [
+            "interpretation",
+            "comment",
+            "note:",
+            "reference :",
+            "remarks",
+            "observation",
+            "impression",
+            "correlation",
+            "criteria",
+            "guidelines",
+        ]
+        return any(marker in section_lower for marker in interpretation_markers)
 
     def _is_section_header(self, row: list) -> bool:
         """
@@ -416,6 +439,10 @@ class PDFExtractor:
         "suggestions", "advice", "recommendation", "recommendations",
         "clinical correlation", "clinical significance", "please correlate",
         "clinically", "advised", "suggest", "indicates", "indicative",
+        # Reference range labels (not actual tests)
+        "normal", "optimal", "desirable", "borderline", "high", "low",
+        "above optimal", "borderline high", "very high", "very low",
+        "high risk", "very high risk", "low risk", "moderate risk",
         # Section markers
         "end of report", "report end", "verified by", "reported by",
         "authorized by", "checked by", "technician", "pathologist",

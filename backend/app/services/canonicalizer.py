@@ -112,6 +112,139 @@ class Canonicalizer:
         "rft": "kidney function test",
     }
 
+    # Label synonyms - map common lab report labels to registry names
+    # These are checked BEFORE alias lookup
+    LABEL_SYNONYMS = {
+        # Glucose
+        "glucose fasting": "fbs",
+        "fasting glucose": "fbs",
+        "fasting blood sugar": "fbs",
+        "fasting plasma glucose": "fbs",
+        "blood sugar fasting": "fbs",
+        # HbA1c
+        "glycosylated hemoglobin": "hba1c",
+        "glycosylated haemoglobin": "hba1c",
+        "glycated hemoglobin": "hba1c",
+        "hba1c": "hba1c",
+        "hemoglobin a1c": "hba1c",
+        # Liver - Bilirubin
+        "bilirubin total": "serum bilirubin total",
+        "total bilirubin": "serum bilirubin total",
+        "bilirubin direct": "serum bilirubin direct",
+        "direct bilirubin": "serum bilirubin direct",
+        "bilirubin indirect": "serum bilirubin indirect",
+        "indirect bilirubin": "serum bilirubin indirect",
+        # Liver - Enzymes
+        "sgot": "aspartate aminotransferase",
+        "sgot/ast": "aspartate aminotransferase",
+        "ast": "aspartate aminotransferase",
+        "sgpt": "alanine aminotransferase",
+        "sgpt/alt": "alanine aminotransferase",
+        "alt": "alanine aminotransferase",
+        "alp": "alkaline phosphatase",
+        "ggt": "gamma glutamyl transferase",
+        # Liver - Proteins
+        "total protein": "serum total protein",
+        "albumin": "serum albumin",
+        "globulin": "serum globulin calculated",
+        "a/g ratio": "albumin globulin ratio",
+        "albumin/globulin ratio": "albumin globulin ratio",
+        "albumin :globulin ratio": "albumin globulin ratio",
+        "a:g ratio": "albumin globulin ratio",
+        # Lipids
+        "total cholesterol": "total cholestrol",  # match registry typo
+        "cholesterol total": "total cholestrol",
+        "cholesterol": "total cholestrol",
+        "triglycerides": "serum triglycerides",
+        "hdl cholesterol": "serum hdl cholestrol",
+        "hdl": "serum hdl cholestrol",
+        "ldl cholesterol": "serum ldl cholestrol",
+        "ldl": "serum ldl cholestrol",
+        "vldl cholesterol": "serum vldl cholestrol",
+        "vldl": "serum vldl cholestrol",
+        "non hdl cholesterol": "non-hdl cholestrol",
+        # Kidney
+        "uric acid": "serum uric acid",
+        "creatinine": "creatinine",
+        "urea": "blood urea",
+        "bun": "blood urea nitrogen",
+        "calcium": "serum calcium",
+        "phosphorus": "serum phosphorus",
+        "sodium": "serum sodium",
+        "potassium": "serum potassium",
+        "chloride": "serum chloride",
+        # Thyroid
+        "tsh": "thyroid stimulating hormone",
+        "t3": "free t3",
+        "t4": "free t4",
+        "free t3": "free t3",
+        "free t4": "free t4",
+        # Vitamins
+        "vitamin d": "vitamin d 25-hydroxy",
+        "25 hydroxy vitamin d": "vitamin d 25-hydroxy",
+        "vitamin b12": "vitamin b12",
+        # Iron
+        "ferritin": "serum ferritin",
+        "iron": "serum ferritin",
+        # CBC - already have good aliases but add more
+        "wbc count": "tlc",
+        "total wbc count": "tlc",
+        "white blood cell count": "tlc",
+        "platelet count": "platelet count",
+        "platelets": "platelet count",
+        # More Lipid variations
+        "vldl cholesterol": "serum vldl cholestrol",
+        "vldl": "serum vldl cholestrol",
+        "v l d l cholesterol": "serum vldl cholestrol",
+        "chol/hdl ratio": "total cholestrol to hdl ratio",
+        "total cholesterol/hdl ratio": "total cholestrol to hdl ratio",
+        "ldl/hdl ratio": "ldl to hdl ratio",
+        "hdl/ldl ratio": "ldl to hdl ratio",
+        "hdl/ ldl ratio": "ldl to hdl ratio",
+        # More Liver variations
+        "bilirubin total": "serum bilirubin total",
+        "bilirubin direct": "serum bilirubin direct", 
+        "bilirubin indirect": "serum bilirubin indirect",
+        "albumin/globulin ratio": "albumin/globulin ratio",
+        "albumin:globulin ratio": "albumin/globulin ratio",
+        "a/g ratio": "albumin/globulin ratio",
+        "a:g ratio": "albumin/globulin ratio",
+        "ag ratio": "albumin/globulin ratio",
+        # Calcium variants
+        "calcium serum": "serum calcium",
+        "calcium": "serum calcium",
+        # Vitamin variants  
+        "vitamin - b12": "vitamin b12",
+        "vitamin b-12": "vitamin b12",
+        "cyanocobalamin": "vitamin b12",
+        "vitamin d 25 hydroxy": "vitamin d 25-hydroxy",
+        "vitamin d total 25 hydroxy": "vitamin d 25-hydroxy",
+        "25 oh vitamin d": "vitamin d 25-hydroxy",
+        "25 hydroxy vitamin d": "vitamin d 25-hydroxy",
+        "folate": "folic acid",
+        "folic acid": "folic acid",
+        "folate folic acid": "folic acid",
+        # Thyroid variants
+        "thyroid stimulating hormone": "thyroid stimulating hormone tsh ultrasensitive",
+        "thyroid stimulating hormone ultrasensitive": "thyroid stimulating hormone tsh ultrasensitive",
+        "tsh ultrasensitive": "thyroid stimulating hormone tsh ultrasensitive",
+        "tsh": "thyroid stimulating hormone tsh ultrasensitive",
+        "triiodothyronine": "free t3",
+        "triiodothyronine t3": "free t3",
+        "t3": "free t3",
+        "total thyroxine": "free t4",
+        "total thyroxine t4": "free t4",
+        "thyroxine": "free t4",
+        "t4": "free t4",
+        # Others
+        "uric acid": "serum uric acid",
+        "homocysteine": "homocysteine",
+        "magnesium serum": "magnesium",
+        "magnesium,serum": "magnesium",
+        "insulin fasting": "insulin fasting",
+        "fasting insulin": "insulin fasting",
+    }
+
     # Common abbreviation expansions
     ABBREVIATIONS = {
         "hb": "hemoglobin",
@@ -171,6 +304,13 @@ class Canonicalizer:
                     if normalized_alias:
                         self._alias_map[normalized_alias] = biomarker
 
+    # Parenthetical terms to preserve (important for disambiguation)
+    PRESERVE_PARENS = {
+        "total", "direct", "indirect", "fasting", "random", "ultrasensitive",
+        "calculated", "serum", "plasma", "urine", "whole blood",
+        "differential", "absolute", "cv", "sd",
+    }
+
     def _normalize(self, text: str) -> str:
         """Normalize text for matching: lowercase, strip whitespace, remove special chars."""
         if not text:
@@ -179,14 +319,35 @@ class Canonicalizer:
         result = text.lower().strip()
         # Replace newlines with spaces
         result = result.replace("\n", " ").replace("\r", " ")
+        # Normalize whitespace around punctuation (e.g., "Albumin :Globulin" → "albumin:globulin")
+        result = re.sub(r"\s*:\s*", ":", result)
+        result = re.sub(r"\s*/\s*", "/", result)
+        result = re.sub(r"\s*-\s*", " ", result)  # Hyphens to spaces
+        result = re.sub(r"\s*,\s*", " ", result)  # Commas to spaces
         # Remove extra whitespace
         result = re.sub(r"\s+", " ", result)
-        # Remove parenthetical content for matching
-        result_no_parens = re.sub(r"\s*\([^)]*\)\s*", " ", result).strip()
-        if result_no_parens:
-            result = result_no_parens
+        
+        # Handle parentheses: keep important terms, remove the rest
+        def replace_parens(match):
+            content = match.group(1).lower().strip()
+            # Keep if it's an important term
+            for term in self.PRESERVE_PARENS:
+                if term in content:
+                    return " " + content + " "
+            return " "
+        
+        result = re.sub(r"\s*\(([^)]*)\)\s*", replace_parens, result)
+        
+        # Remove extra whitespace again
+        result = re.sub(r"\s+", " ", result)
         # Remove trailing asterisks and flags
         result = re.sub(r"\s*\*+\s*$", "", result)
+        # Clean dots from abbreviations (V.L.D.L → vldl)
+        # Handle patterns like "v.l.d.l cholesterol" → "vldl cholesterol"
+        def clean_dotted_abbrev(match):
+            abbrev = match.group(0).replace(".", "")
+            return abbrev
+        result = re.sub(r"\b([a-z]\.)+[a-z]\b", clean_dotted_abbrev, result)
         return result.strip()
 
     def _strip_method_descriptors(self, text: str) -> str:
@@ -339,6 +500,12 @@ class Canonicalizer:
         # 1. Basic normalization
         normalized = self._normalize(raw_label)
         attempts.append((normalized, 1.0))
+
+        # 1.5. Check LABEL_SYNONYMS for common lab report variants
+        if normalized in self.LABEL_SYNONYMS:
+            synonym = self.LABEL_SYNONYMS[normalized]
+            attempts.append((synonym, 0.98))
+            attempts.append((self._normalize(synonym), 0.98))
 
         # 2. Strip method descriptors
         stripped = self._normalize(self._strip_method_descriptors(raw_label))
