@@ -1,0 +1,93 @@
+biomarker_id,analyte_name,specimen,measurement_property,canonical_unit,category,panel_seed,is_derived,aliases,default_reference_range_notes
+bio:hba1c::spec:whole-blood,Hba1c,Whole Blood,Percentage,%,,Hba1c,False,"[""Hba1c""]","<5.7: Normal
+5.7 to 6.5: Pre-diabetic
+>6.5: Diabetic"
+bio:estimated-average-glucose::spec:serum-plasma,Estimated Average Glucose,Serum/Plasma,Mass concentration,mg/dl,,Hba1c,True,"[""Estimated Average Glucose""]",
+bio:fbs::spec:serum-plasma,FBS,Serum/Plasma,Mass concentration,mg/dl,,Fasting Blood Sugar,False,"[""FBS""]","< 100: Normal
+100 to 126: Pre-diabetic
+>126: Diabetic"
+bio:total-cholestrol::spec:serum-plasma,Total Cholestrol,Serum/Plasma,Mass concentration,mg/dl,,Lipid Profile,False,"[""Total Cholestrol""]","< 200: Normal
+200 to 240: Borderline
+>= 240: High"
+bio:serum-triglycerides::spec:serum-plasma,Serum Triglycerides,Serum/Plasma,Mass concentration,mg/dl,,Lipid Profile,False,"[""Serum Triglycerides""]",< 150
+bio:serum-hdl-cholestrol::spec:serum-plasma,Serum HDL Cholestrol,Serum/Plasma,Mass concentration,mg/dl,,Lipid Profile,False,"[""Serum HDL Cholestrol""]",40 to 60
+bio:serum-ldl-cholestrol::spec:serum-plasma,Serum LDL Cholestrol,Serum/Plasma,Mass concentration,mg/dl,,Lipid Profile,False,"[""Serum LDL Cholestrol""]","< 100: Optimal
+100 to 129: Near / Above Optimal
+130 to 159: Borderline High
+160 to 189: High
+>= 190: Very High"
+bio:serum-vldl-cholestrol::spec:serum-plasma,Serum VLDL Cholestrol,Serum/Plasma,Mass concentration,mg/dl,,Lipid Profile,False,"[""Serum VLDL Cholestrol""]",06 to 30
+bio:total-cholestrol-to-hdl-ratio::spec:serum-plasma,Total Cholestrol to HDL Ratio,Serum/Plasma,Ratio,Ratio,,Lipid Profile,True,"[""Total Cholestrol to HDL Ratio""]",3.3 to 4.4
+bio:ldl-to-hdl-ratio::spec:serum-plasma,LDL to HDL Ratio,Serum/Plasma,Ratio,Ratio,,Lipid Profile,True,"[""LDL to HDL Ratio""]","0.5 to 3.0: Desirable or Low Risk
+3.0 to 6.0: Line or Elevated Risk
+> 6.0: High Risk"
+bio:non-hdl-cholestrol::spec:serum-plasma,Non-HDL Cholestrol,Serum/Plasma,Mass concentration,mg/dl,,Lipid Profile,True,"[""Non-HDL Cholestrol""]",0 to 160
+bio:apolipoprotein-a1::spec:serum-plasma,Apolipoprotein A1,Serum/Plasma,Mass concentration,mg/dl,,Lipid Profile,False,"[""Apolipoprotein A1""]",79 to 169
+bio:apolipoprotein-b::spec:serum-plasma,Apolipoprotein B,Serum/Plasma,Mass concentration,mg/dl,,Lipid Profile,False,"[""Apolipoprotein B""]",46 to 174
+bio:apolipoprotein-b-a1-ratio::spec:serum-plasma,Apolipoprotein B/A1 ratio,Serum/Plasma,Ratio,Ratio,,Lipid Profile,True,"[""Apolipoprotein B/A1 ratio""]",0.35 to 1.00
+bio:lipoprotein-a::spec:serum-plasma,Lipoprotein A,Serum/Plasma,Mass concentration,mg/dl,,Lipid Profile,False,"[""Lipoprotein A""]",<30
+bio:high-sensitivity-c-reactive-protein::spec:serum-plasma,High Sensitivity C-Reactive Protein,Serum/Plasma,Mass concentration,mg/dl,,Lipid Profile,False,"[""High Sensitivity C-Reactive Protein""]","For Cardiac Risk: 
+<0.1 Low risk
+0.1 to 0.3 Average Risk
+0.31 to 1.0 High Risk"
+bio:serum-bilirubin-total::spec:serum-plasma,"Serum Bilirubin, (Total)",Serum/Plasma,Mass concentration,mg/dl,,Liver Function Test,False,"[""Serum Bilirubin, (Total)""]",0.3 - 1.2
+bio:serum-bilirubin-direct::spec:serum-plasma,"Serum Bilirubin, (Direct)",Serum/Plasma,Mass concentration,mg/dl,,Liver Function Test,False,"[""Serum Bilirubin, (Direct)""]",0 - 0.3
+bio:serum-bilirubin-indirect::spec:serum-plasma,"Serum Bilirubin, (Indirect)",Serum/Plasma,Mass concentration,mg/dl,,Liver Function Test,False,"[""Serum Bilirubin, (Indirect)""]",0.0 - 0.8
+bio:aspartate-aminotransferase-ast-sgot::spec:serum-plasma,Aspartate Aminotransferase (AST/SGOT),Serum/Plasma,Enzymatic activity,Units per litre (U/L),,Liver Function Test,False,"[""Aspartate Aminotransferase (AST/SGOT)""]",5 - 34
+bio:alanine-aminotransferase-alt-sgpt::spec:serum-plasma,Alanine Aminotransferase (ALT/SGPT),Serum/Plasma,Enzymatic activity,Units per litre (U/L),,Liver Function Test,False,"[""Alanine Aminotransferase (ALT/SGPT)""]",10 - 49
+bio:alkaline-phosphatase-alp::spec:serum-plasma,Alkaline Phosphatase (ALP),Serum/Plasma,Enzymatic activity,Units per litre (U/L),,Liver Function Test,False,"[""Alkaline Phosphatase (ALP)""]",38 - 126
+bio:gamma-glutamyl-transferase-ggt::spec:serum-plasma,Gamma Glutamyl Transferase (GGT),Serum/Plasma,Enzymatic activity,Units per litre (U/L),,Liver Function Test,False,"[""Gamma Glutamyl Transferase (GGT)""]",5 - 73
+bio:serum-total-protein::spec:serum-plasma,Serum Total Protein,Serum/Plasma,Mass concentration,g/dl,,Liver Function Test,False,"[""Serum Total Protein""]",5.7 - 8.2
+bio:serum-albumin::spec:serum-plasma,Serum Albumin,Serum/Plasma,Mass concentration,g/dl,,Liver Function Test,False,"[""Serum Albumin""]",3.4 - 4.8
+bio:serum-globulin-calculated::spec:serum-plasma,Serum Globulin (calculated),Serum/Plasma,Mass concentration,g/dl,,Liver Function Test,False,"[""Serum Globulin (calculated)""]",3.0 - 4.2
+bio:albumin-globulin-ratio::spec:serum-plasma,Albumin/Globulin Ratio,Serum/Plasma,Ratio,Ratio,,Liver Function Test,True,"[""Albumin/Globulin Ratio""]",1.2 - 2.5
+bio:sgot-sgpt-ratio::spec:serum-plasma,SGOT/SGPT Ratio,Serum/Plasma,Ratio,Ratio,,Liver Function Test,True,"[""SGOT/SGPT Ratio""]",0.7 - 1.4
+bio:tibc::spec:serum-plasma,TIBC,Serum/Plasma,Mass concentration,μmol/L,,Liver Function Test,False,"[""TIBC""]",250 - 400
+bio:lipase::spec:serum-plasma,Lipase,Serum/Plasma,Enzymatic activity,U/L,,Liver Function Test,False,"[""Lipase""]",08 - 78
+bio:amylase::spec:serum-plasma,Amylase,Serum/Plasma,Enzymatic activity,U/L,,Liver Function Test,False,"[""Amylase""]",25 - 125
+bio:serum-ferritin::spec:serum-plasma,Serum Ferritin,Serum/Plasma,Mass concentration,ng/ml,,Liver Function Test,False,"[""Serum Ferritin""]",21.81 - 274.6
+bio:creatinine::spec:serum-plasma,Creatinine,Serum/Plasma,Mass concentration,mg/dl,,Kidney Function Test 1,False,"[""Creatinine""]",0.7 - 1.3
+bio:serum-uric-acid::spec:serum-plasma,Serum Uric Acid,Serum/Plasma,Mass concentration,mg/dl,,Kidney Function Test 1,False,"[""Serum Uric Acid""]",3.5 - 7.2
+bio:serum-calcium::spec:serum-plasma,Serum Calcium,Serum/Plasma,Mass concentration,mg/dl,,Kidney Function Test 1,False,"[""Serum Calcium""]",8.7 - 10.4
+bio:serum-phosphorus::spec:serum-plasma,Serum Phosphorus,Serum/Plasma,Mass concentration,mg/dl,,Kidney Function Test 1,False,"[""Serum Phosphorus""]",2.4 - 5.1
+bio:serum-sodium::spec:serum-plasma,Serum Sodium,Serum/Plasma,Mass concentration,mmol/L,,Kidney Function Test 1,False,"[""Serum Sodium""]",132 - 146
+bio:serum-chloride::spec:serum-plasma,Serum Chloride,Serum/Plasma,Mass concentration,mmol/L,,Kidney Function Test 1,False,"[""Serum Chloride""]",99 - 109
+bio:serum-potassium::spec:serum-plasma,Serum Potassium,Serum/Plasma,Mass concentration,mmol/L,,Kidney Function Test 1,False,"[""Serum Potassium""]",3.5 - 5
+bio:serum-bicarbonate::spec:serum-plasma,Serum Bicarbonate,Serum/Plasma,Mass concentration,mmol/L,,Kidney Function Test 1,False,"[""Serum Bicarbonate""]",21 - 32
+bio:blood-urea::spec:serum-plasma,Blood Urea,Serum/Plasma,Mass concentration,mg/dl,,Kidney Function Test 1,False,"[""Blood Urea""]",19.3 - 49.38
+bio:blood-urea-nitrogen-bun::spec:serum-plasma,Blood Urea Nitrogen (BUN),Serum/Plasma,Mass concentration,mg/dl,,Kidney Function Test 1,False,"[""Blood Urea Nitrogen (BUN)""]",8 - 20
+bio:bun-creatinine-ratio::spec:serum-plasma,Bun/Creatinine Ratio,Serum/Plasma,Ratio,Ratio,,Kidney Function Test 1,True,"[""Bun/Creatinine Ratio""]",
+bio:urea-creatinine-ratio::spec:serum-plasma,Urea/Creatinine Ratio,Serum/Plasma,Ratio,Ratio,,Kidney Function Test 1,True,"[""Urea/Creatinine Ratio""]",
+bio:haemoglobin-hb::spec:whole-blood,Haemoglobin (HB),Whole Blood,Mass concentration,g/dl,,Complete Haemogram,False,"[""Haemoglobin (HB)""]",13.0 - 17.0
+bio:total-leucocyte-count-tlc::spec:serum-plasma,Total Leucocyte Count (TLC),Serum/Plasma,Count concentration,10^3/μL,,Complete Haemogram,False,"[""Total Leucocyte Count (TLC)""]",4.0 - 10.0
+bio:hematocrit-pcv::spec:whole-blood,Hematocrit (PCV),Whole Blood,Percentage,%,,Complete Haemogram,False,"[""Hematocrit (PCV)""]",40.0 - 50.0
+bio:red-blood-cell-count-rbc::spec:whole-blood,Red Blood Cell Count (RBC),Whole Blood,Mass concentration,millions/cumm,,Complete Haemogram,False,"[""Red Blood Cell Count (RBC)""]",4.50 - 5.50
+bio:mean-corp-volume-mcv::spec:whole-blood,Mean Corp Volume (MCV),Whole Blood,Mass concentration,FL,,Complete Haemogram,False,"[""Mean Corp Volume (MCV)""]",83.0 - 101.0
+bio:mean-corp-hb-mch::spec:whole-blood,Mean Corp Hb (MCH),Whole Blood,Mass concentration,pg,,Complete Haemogram,False,"[""Mean Corp Hb (MCH)""]",27.0 - 33.0
+bio:mean-corp-hb-conc-mchc::spec:whole-blood,Mean Corp Hb Conc (MCHC),Whole Blood,Percentage,gm%,,Complete Haemogram,False,"[""Mean Corp Hb Conc (MCHC)""]",31.5 - 34.5
+bio:rdw-cv::spec:whole-blood,RDW - CV,Whole Blood,Percentage,%,,Complete Haemogram,False,"[""RDW - CV""]",12.1 - 13.6
+bio:rdw-sd::spec:whole-blood,RDW - SD,Whole Blood,Mass concentration,FL,,Complete Haemogram,False,"[""RDW - SD""]",39.0 - 46.0
+bio:mentzer-index::spec:serum-plasma,Mentzer Index,Serum/Plasma,Mass concentration,Ratio,,Complete Haemogram,False,"[""Mentzer Index""]",
+bio:neutrophils::spec:whole-blood,Neutrophils,Whole Blood,Percentage,%,,Complete Haemogram,False,"[""Neutrophils""]",40 - 75
+bio:lymphocytes::spec:whole-blood,Lymphocytes,Whole Blood,Percentage,%,,Complete Haemogram,False,"[""Lymphocytes""]",20 - 45
+bio:monocytes::spec:whole-blood,Monocytes,Whole Blood,Percentage,%,,Complete Haemogram,False,"[""Monocytes""]",01 - 10
+bio:eosinophils::spec:whole-blood,Eosinophils,Whole Blood,Percentage,%,,Complete Haemogram,False,"[""Eosinophils""]",01 - 06
+bio:basophils::spec:whole-blood,Basophils,Whole Blood,Percentage,%,,Complete Haemogram,False,"[""Basophils""]",00 - 02
+bio:absolute-neutrophil-count-anc::spec:whole-blood,Absolute Neutrophil Count (ANC),Whole Blood,Count concentration,10^3/μL,,Complete Haemogram,False,"[""Absolute Neutrophil Count (ANC)""]",2.0 - 7.0
+bio:absolute-lymphocyte-count-alc::spec:whole-blood,Absolute Lymphocyte Count (ALC),Whole Blood,Count concentration,10^3/μL,,Complete Haemogram,False,"[""Absolute Lymphocyte Count (ALC)""]",1.0 - 3.0
+bio:absolute-monocyte-count::spec:whole-blood,Absolute Monocyte Count,Whole Blood,Count concentration,10^3/μL,,Complete Haemogram,False,"[""Absolute Monocyte Count""]",0.2 - 1.0
+bio:absolute-eosinophil-count-aec::spec:whole-blood,Absolute Eosinophil Count (AEC),Whole Blood,Count concentration,10^3/μL,,Complete Haemogram,False,"[""Absolute Eosinophil Count (AEC)""]",0.04 - 0.44
+bio:absolute-basophil-count::spec:whole-blood,Absolute Basophil Count,Whole Blood,Count concentration,10^3/μL,,Complete Haemogram,False,"[""Absolute Basophil Count""]",0.0 - 0.10
+bio:platelet-count-plt::spec:whole-blood,Platelet Count(PLT),Whole Blood,Count concentration,10^3/μL,,Complete Haemogram,False,"[""Platelet Count(PLT)""]",150 - 410
+bio:mpv::spec:whole-blood,MPV,Whole Blood,Mass concentration,FL,,Complete Haemogram,False,"[""MPV""]",7.4 - 11.4
+bio:esr::spec:serum-plasma,ESR,Serum/Plasma,Mass concentration,mm/1st-hr.,,Complete Haemogram,False,"[""ESR""]",0 - 10
+bio:thyroid-stimulating-hormone-tsh-ultrasensitive::spec:serum-plasma,Thyroid Stimulating Hormone (TSH) - Ultrasensitive,Serum/Plasma,Enzymatic activity,μIU/L,,Thyroid Profile,False,"[""Thyroid Stimulating Hormone (TSH) - Ultrasensitive""]",0.34 - 5.60
+bio:free-t3::spec:serum-plasma,Free T3,Serum/Plasma,Mass concentration,pg/ml,,Thyroid Profile,False,"[""Free T3""]",2.5 - 3.9
+bio:free-t4::spec:serum-plasma,Free T4,Serum/Plasma,Mass concentration,ng/dl,,Thyroid Profile,False,"[""Free T4""]",0.61 - 1.12
+bio:vitamin-b12::spec:serum-plasma,Vitamin B12,Serum/Plasma,Mass concentration,pg/ml,,Vitamin B12,False,"[""Vitamin B12""]",211 - 912
+bio:vitamin-d-25-hydroxy::spec:serum-plasma,"Vitamin D, 25-Hydroxy",Serum/Plasma,Mass concentration,ng/ml,,Vitamin D,False,"[""Vitamin D, 25-Hydroxy""]",30 - 100
+bio:testosterone::spec:serum-plasma,Testosterone,Serum/Plasma,Mass concentration,ng/ml,,Testosterone,False,"[""Testosterone""]",241 - 827
+bio:alpha-feto-protein-afp::spec:serum-plasma,Alpha Feto Protein (AFP),Serum/Plasma,Mass concentration,ng/ml,,Cancer Marker,False,"[""Alpha Feto Protein (AFP)""]",0 to 8.78
+bio:carbohydrate-antigen-ca-19-9::spec:serum-plasma,Carbohydrate Antigen (CA 19-9),Serum/Plasma,Mass concentration,U/ml,,Cancer Marker,False,"[""Carbohydrate Antigen (CA 19-9)""]",0 - 30.9
+bio:carcino-embryonic-antigen::spec:serum-plasma,Carcino Embryonic Antigen,Serum/Plasma,Mass concentration,ng/dl,,Cancer Marker,False,"[""Carcino Embryonic Antigen""]","Smokers: <5.0
+Non-Smokers: <3.0"

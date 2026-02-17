@@ -1,0 +1,206 @@
+biomarker_id,collected_at,value_original,unit_original,value_normalized,unit_canonical,panel_name,source_type,lab_name,document_id,page,confidence
+bio:absolute-basophil-count::spec:whole-blood,2021-10-01,0.04,10^3/μL,0.04,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:absolute-eosinophil-count-aec::spec:whole-blood,2020-06-03,0.053,10^3/μL,0.053,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:absolute-eosinophil-count-aec::spec:whole-blood,2021-10-01,0.08,10^3/μL,0.08,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:absolute-lymphocyte-count-alc::spec:whole-blood,2020-06-03,1.802,10^3/μL,1.802,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:absolute-lymphocyte-count-alc::spec:whole-blood,2021-10-01,1.72,10^3/μL,1.72,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:absolute-monocyte-count::spec:whole-blood,2020-06-03,0.265,10^3/μL,0.265,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:absolute-monocyte-count::spec:whole-blood,2021-10-01,0.2,10^3/μL,0.2,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:absolute-neutrophil-count-anc::spec:whole-blood,2020-06-03,3.18,10^3/μL,3.18,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:absolute-neutrophil-count-anc::spec:whole-blood,2021-10-01,2.57,10^3/μL,2.57,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:alanine-aminotransferase-alt-sgpt::spec:serum-plasma,2020-06-03,22.0,Units per litre (U/L),22.0,Units per litre (U/L),Liver Function Test,manual_sheet_v1,,,,1.0
+bio:alanine-aminotransferase-alt-sgpt::spec:serum-plasma,2021-10-01,27.0,Units per litre (U/L),27.0,Units per litre (U/L),Liver Function Test,manual_sheet_v1,,,,1.0
+bio:alanine-aminotransferase-alt-sgpt::spec:serum-plasma,2023-09-16,18.1,Units per litre (U/L),18.1,Units per litre (U/L),Liver Function Test,manual_sheet_v1,,,,1.0
+bio:albumin-globulin-ratio::spec:serum-plasma,2020-06-03,1.3,Ratio,1.3,Ratio,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:albumin-globulin-ratio::spec:serum-plasma,2021-10-01,1.74,Ratio,1.74,Ratio,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:albumin-globulin-ratio::spec:serum-plasma,2023-09-16,1.37,Ratio,1.37,Ratio,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:alkaline-phosphatase-alp::spec:serum-plasma,2020-06-03,118.0,Units per litre (U/L),118.0,Units per litre (U/L),Liver Function Test,manual_sheet_v1,,,,1.0
+bio:alkaline-phosphatase-alp::spec:serum-plasma,2021-10-01,91.0,Units per litre (U/L),91.0,Units per litre (U/L),Liver Function Test,manual_sheet_v1,,,,1.0
+bio:alkaline-phosphatase-alp::spec:serum-plasma,2023-09-16,100.8,Units per litre (U/L),100.8,Units per litre (U/L),Liver Function Test,manual_sheet_v1,,,,1.0
+bio:alpha-feto-protein-afp::spec:serum-plasma,2023-09-16,2.68,ng/ml,2.68,ng/ml,Cancer Marker,manual_sheet_v1,,,,1.0
+bio:amylase::spec:serum-plasma,2023-09-16,41.0,U/L,41.0,U/L,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:apolipoprotein-a1::spec:serum-plasma,2023-09-16,136.0,mg/dl,136.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:apolipoprotein-b-a1-ratio::spec:serum-plasma,2023-09-16,0.81,Ratio,0.81,Ratio,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:apolipoprotein-b::spec:serum-plasma,2023-09-16,110.0,mg/dl,110.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:aspartate-aminotransferase-ast-sgot::spec:serum-plasma,2020-06-03,18.0,Units per litre (U/L),18.0,Units per litre (U/L),Liver Function Test,manual_sheet_v1,,,,1.0
+bio:aspartate-aminotransferase-ast-sgot::spec:serum-plasma,2021-10-01,21.0,Units per litre (U/L),21.0,Units per litre (U/L),Liver Function Test,manual_sheet_v1,,,,1.0
+bio:aspartate-aminotransferase-ast-sgot::spec:serum-plasma,2023-09-16,21.0,Units per litre (U/L),21.0,Units per litre (U/L),Liver Function Test,manual_sheet_v1,,,,1.0
+bio:basophils::spec:whole-blood,2020-06-03,0.0,%,0.0,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:basophils::spec:whole-blood,2021-10-01,0.8,%,0.8,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:basophils::spec:whole-blood,2023-09-16,0.5,%,0.5,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:blood-urea-nitrogen-bun::spec:serum-plasma,2021-10-01,11.6,mg/dl,11.6,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:blood-urea::spec:serum-plasma,2020-06-03,21.0,mg/dl,21.0,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:blood-urea::spec:serum-plasma,2021-10-01,25.0,mg/dl,25.0,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:blood-urea::spec:serum-plasma,2023-06-23,15.0,mg/dl,15.0,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:blood-urea::spec:serum-plasma,2023-09-16,24.7,mg/dl,24.7,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:bun-creatinine-ratio::spec:serum-plasma,2021-10-01,15.89,Ratio,15.89,Ratio,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:bun-creatinine-ratio::spec:serum-plasma,2023-09-16,0.0,Ratio,0.0,Ratio,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:carbohydrate-antigen-ca-19-9::spec:serum-plasma,2023-09-16,2.06,U/ml,2.06,U/ml,Cancer Marker,manual_sheet_v1,,,,1.0
+bio:carcino-embryonic-antigen::spec:serum-plasma,2023-09-16,1.73,ng/dl,1.73,ng/dl,Cancer Marker,manual_sheet_v1,,,,1.0
+bio:creatinine::spec:serum-plasma,2020-06-03,0.7,mg/dl,0.7,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:creatinine::spec:serum-plasma,2021-10-01,0.73,mg/dl,0.73,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:creatinine::spec:serum-plasma,2023-06-23,0.71,mg/dl,0.71,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:creatinine::spec:serum-plasma,2023-09-16,0.73,mg/dl,0.73,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:eosinophils::spec:whole-blood,2020-06-03,1.0,%,1.0,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:eosinophils::spec:whole-blood,2021-10-01,1.7,%,1.7,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:eosinophils::spec:whole-blood,2023-09-16,2.0,%,2.0,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:esr::spec:serum-plasma,2020-06-03,8.0,mm/1st-hr.,8.0,mm/1st-hr.,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:esr::spec:serum-plasma,2021-10-01,11.0,mm/1st-hr.,11.0,mm/1st-hr.,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:esr::spec:serum-plasma,2023-09-16,73.0,mm/1st-hr.,73.0,mm/1st-hr.,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:estimated-average-glucose::spec:serum-plasma,2023-06-23,134.0,mg/dl,134.0,mg/dl,Hba1c,manual_sheet_v1,,,,1.0
+bio:estimated-average-glucose::spec:serum-plasma,2023-09-16,119.3,mg/dl,119.3,mg/dl,Hba1c,manual_sheet_v1,,,,1.0
+bio:estimated-average-glucose::spec:serum-plasma,2025-04-11,136.98,mg/dl,136.98,mg/dl,Hba1c,manual_sheet_v1,,,,1.0
+bio:fbs::spec:serum-plasma,2019-11-02,116.89,mg/dl,116.89,mg/dl,Fasting Blood Sugar,manual_sheet_v1,,,,1.0
+bio:fbs::spec:serum-plasma,2020-06-03,86.0,mg/dl,86.0,mg/dl,Fasting Blood Sugar,manual_sheet_v1,,,,1.0
+bio:fbs::spec:serum-plasma,2021-10-01,80.0,mg/dl,80.0,mg/dl,Fasting Blood Sugar,manual_sheet_v1,,,,1.0
+bio:fbs::spec:serum-plasma,2023-09-16,102.0,mg/dl,102.0,mg/dl,Fasting Blood Sugar,manual_sheet_v1,,,,1.0
+bio:free-t3::spec:serum-plasma,2020-06-03,3.71,pg/ml,3.71,pg/ml,Thyroid Profile,manual_sheet_v1,,,,1.0
+bio:free-t4::spec:serum-plasma,2020-06-03,0.91,ng/dl,0.91,ng/dl,Thyroid Profile,manual_sheet_v1,,,,1.0
+bio:gamma-glutamyl-transferase-ggt::spec:serum-plasma,2020-06-03,20.0,Units per litre (U/L),20.0,Units per litre (U/L),Liver Function Test,manual_sheet_v1,,,,1.0
+bio:gamma-glutamyl-transferase-ggt::spec:serum-plasma,2021-10-01,16.9,Units per litre (U/L),16.9,Units per litre (U/L),Liver Function Test,manual_sheet_v1,,,,1.0
+bio:gamma-glutamyl-transferase-ggt::spec:serum-plasma,2023-09-16,28.7,Units per litre (U/L),28.7,Units per litre (U/L),Liver Function Test,manual_sheet_v1,,,,1.0
+bio:haemoglobin-hb::spec:whole-blood,2020-06-03,13.2,g/dl,13.2,g/dl,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:haemoglobin-hb::spec:whole-blood,2021-10-01,13.3,g/dl,13.3,g/dl,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:haemoglobin-hb::spec:whole-blood,2023-09-16,13.1,g/dl,13.1,g/dl,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:hba1c::spec:whole-blood,2019-11-02,5.7,%,5.7,%,Hba1c,manual_sheet_v1,,,,1.0
+bio:hba1c::spec:whole-blood,2021-10-01,5.7,%,5.7,%,Hba1c,manual_sheet_v1,,,,1.0
+bio:hba1c::spec:whole-blood,2023-06-23,6.3,%,6.3,%,Hba1c,manual_sheet_v1,,,,1.0
+bio:hba1c::spec:whole-blood,2023-09-16,5.8,%,5.8,%,Hba1c,manual_sheet_v1,,,,1.0
+bio:hba1c::spec:whole-blood,2025-04-11,6.4,%,6.4,%,Hba1c,manual_sheet_v1,,,,1.0
+bio:hematocrit-pcv::spec:whole-blood,2020-06-03,42.0,%,42.0,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:hematocrit-pcv::spec:whole-blood,2021-10-01,41.0,%,41.0,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:hematocrit-pcv::spec:whole-blood,2023-09-16,40.1,%,40.1,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:high-sensitivity-c-reactive-protein::spec:serum-plasma,2023-09-16,0.62,mg/dl,0.62,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:ldl-to-hdl-ratio::spec:serum-plasma,2019-11-02,3.39,Ratio,3.39,Ratio,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:ldl-to-hdl-ratio::spec:serum-plasma,2020-06-03,3.23,Ratio,3.23,Ratio,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:ldl-to-hdl-ratio::spec:serum-plasma,2021-10-01,2.96,Ratio,2.96,Ratio,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:ldl-to-hdl-ratio::spec:serum-plasma,2023-06-23,4.15,Ratio,4.15,Ratio,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:ldl-to-hdl-ratio::spec:serum-plasma,2023-09-16,4.01,Ratio,4.01,Ratio,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:ldl-to-hdl-ratio::spec:serum-plasma,2025-04-11,2.93,Ratio,2.93,Ratio,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:lipase::spec:serum-plasma,2023-09-16,9.5,U/L,9.5,U/L,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:lipoprotein-a::spec:serum-plasma,2023-09-16,10.0,mg/dl,10.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:lymphocytes::spec:whole-blood,2020-06-03,34.0,%,34.0,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:lymphocytes::spec:whole-blood,2021-10-01,37.0,%,37.0,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:lymphocytes::spec:whole-blood,2023-09-16,28.9,%,28.9,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:mean-corp-hb-conc-mchc::spec:whole-blood,2020-06-03,31.5,gm%,31.5,gm%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:mean-corp-hb-conc-mchc::spec:whole-blood,2021-10-01,32.4,gm%,32.4,gm%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:mean-corp-hb-conc-mchc::spec:whole-blood,2023-09-16,32.8,gm%,32.8,gm%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:mean-corp-hb-mch::spec:whole-blood,2020-06-03,27.0,pg,27.0,pg,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:mean-corp-hb-mch::spec:whole-blood,2021-10-01,26.8,pg,26.8,pg,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:mean-corp-hb-mch::spec:whole-blood,2023-09-16,26.7,pg,26.7,pg,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:mean-corp-volume-mcv::spec:whole-blood,2020-06-03,83.0,FL,83.0,FL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:mean-corp-volume-mcv::spec:whole-blood,2021-10-01,82.8,FL,82.8,FL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:mean-corp-volume-mcv::spec:whole-blood,2023-09-16,81.3,FL,81.3,FL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:mentzer-index::spec:serum-plasma,2021-10-01,16.56,Ratio,16.56,Ratio,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:monocytes::spec:whole-blood,2020-06-03,5.0,%,5.0,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:monocytes::spec:whole-blood,2021-10-01,4.3,%,4.3,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:monocytes::spec:whole-blood,2023-09-16,6.3,%,6.3,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:mpv::spec:whole-blood,2021-10-01,9.4,FL,9.4,FL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:neutrophils::spec:whole-blood,2020-06-03,60.0,%,60.0,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:neutrophils::spec:whole-blood,2021-10-01,55.8,%,55.8,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:neutrophils::spec:whole-blood,2023-09-16,62.3,%,62.3,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:non-hdl-cholestrol::spec:serum-plasma,2019-11-02,161.8,mg/dl,161.8,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:non-hdl-cholestrol::spec:serum-plasma,2020-06-03,137.0,mg/dl,137.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:non-hdl-cholestrol::spec:serum-plasma,2021-10-01,133.0,mg/dl,133.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:non-hdl-cholestrol::spec:serum-plasma,2023-06-23,186.0,mg/dl,186.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:non-hdl-cholestrol::spec:serum-plasma,2023-09-16,176.4,mg/dl,176.4,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:non-hdl-cholestrol::spec:serum-plasma,2025-04-11,150.0,mg/dl,150.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:platelet-count-plt::spec:whole-blood,2020-06-03,338.0,10^3/μL,338.0,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:platelet-count-plt::spec:whole-blood,2021-10-01,243.0,10^3/μL,243.0,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:platelet-count-plt::spec:whole-blood,2023-09-16,323.0,10^3/μL,323.0,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:rdw-cv::spec:whole-blood,2020-06-03,14.0,%,14.0,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:rdw-cv::spec:whole-blood,2021-10-01,16.0,%,16.0,%,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:rdw-sd::spec:whole-blood,2021-10-01,47.3,FL,47.3,FL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:red-blood-cell-count-rbc::spec:whole-blood,2020-06-03,5.14,millions/cumm,5.14,millions/cumm,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:red-blood-cell-count-rbc::spec:whole-blood,2021-10-01,5.0,millions/cumm,5.0,millions/cumm,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:red-blood-cell-count-rbc::spec:whole-blood,2023-09-16,4.93,millions/cumm,4.93,millions/cumm,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:serum-albumin::spec:serum-plasma,2020-06-03,4.3,g/dl,4.3,g/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-albumin::spec:serum-plasma,2021-10-01,4.38,g/dl,4.38,g/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-albumin::spec:serum-plasma,2023-09-16,4.59,g/dl,4.59,g/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-bicarbonate::spec:serum-plasma,2023-09-16,29.6,mmol/L,29.6,mmol/L,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-bilirubin-direct::spec:serum-plasma,2020-06-03,0.32,mg/dl,0.32,mg/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-bilirubin-direct::spec:serum-plasma,2021-10-01,0.18,mg/dl,0.18,mg/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-bilirubin-direct::spec:serum-plasma,2023-09-16,0.25,mg/dl,0.25,mg/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-bilirubin-indirect::spec:serum-plasma,2020-06-03,0.32,mg/dl,0.32,mg/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-bilirubin-indirect::spec:serum-plasma,2021-10-01,0.29,mg/dl,0.29,mg/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-bilirubin-indirect::spec:serum-plasma,2023-09-16,0.3,mg/dl,0.3,mg/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-bilirubin-total::spec:serum-plasma,2020-06-03,0.64,mg/dl,0.64,mg/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-bilirubin-total::spec:serum-plasma,2021-10-01,0.47,mg/dl,0.47,mg/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-bilirubin-total::spec:serum-plasma,2023-09-16,0.55,mg/dl,0.55,mg/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-calcium::spec:serum-plasma,2021-10-01,9.8,mg/dl,9.8,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-calcium::spec:serum-plasma,2023-06-23,9.1,mg/dl,9.1,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-calcium::spec:serum-plasma,2023-09-16,9.69,mg/dl,9.69,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-chloride::spec:serum-plasma,2021-10-01,105.0,mmol/L,105.0,mmol/L,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-chloride::spec:serum-plasma,2023-09-16,105.8,mmol/L,105.8,mmol/L,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-ferritin::spec:serum-plasma,2023-09-16,69.93,ng/ml,69.93,ng/ml,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-globulin-calculated::spec:serum-plasma,2020-06-03,3.3,g/dl,3.3,g/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-globulin-calculated::spec:serum-plasma,2021-10-01,2.52,g/dl,2.52,g/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-globulin-calculated::spec:serum-plasma,2023-09-16,3.36,g/dl,3.36,g/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-hdl-cholestrol::spec:serum-plasma,2019-11-02,40.5,mg/dl,40.5,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-hdl-cholestrol::spec:serum-plasma,2020-06-03,33.0,mg/dl,33.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-hdl-cholestrol::spec:serum-plasma,2021-10-01,41.0,mg/dl,41.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-hdl-cholestrol::spec:serum-plasma,2023-06-23,39.0,mg/dl,39.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-hdl-cholestrol::spec:serum-plasma,2023-09-16,36.6,mg/dl,36.6,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-hdl-cholestrol::spec:serum-plasma,2025-04-11,41.0,mg/dl,41.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-ldl-cholestrol::spec:serum-plasma,2019-11-02,137.1,mg/dl,137.1,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-ldl-cholestrol::spec:serum-plasma,2020-06-03,106.6,mg/dl,106.6,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-ldl-cholestrol::spec:serum-plasma,2021-10-01,121.4,mg/dl,121.4,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-ldl-cholestrol::spec:serum-plasma,2023-06-23,161.8,mg/dl,161.8,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-ldl-cholestrol::spec:serum-plasma,2023-09-16,146.6,mg/dl,146.6,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-ldl-cholestrol::spec:serum-plasma,2025-04-11,120.2,mg/dl,120.2,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-phosphorus::spec:serum-plasma,2021-10-01,4.4,mg/dl,4.4,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-phosphorus::spec:serum-plasma,2023-09-16,3.78,mg/dl,3.78,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-potassium::spec:serum-plasma,2023-09-16,4.55,mmol/L,4.55,mmol/L,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-sodium::spec:serum-plasma,2021-10-01,139.0,mmol/L,139.0,mmol/L,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-sodium::spec:serum-plasma,2023-09-16,139.3,mmol/L,139.3,mmol/L,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-total-protein::spec:serum-plasma,2020-06-03,7.6,g/dl,7.6,g/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-total-protein::spec:serum-plasma,2021-10-01,6.9,g/dl,6.9,g/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-total-protein::spec:serum-plasma,2023-09-16,7.95,g/dl,7.95,g/dl,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:serum-triglycerides::spec:serum-plasma,2019-11-02,123.5,mg/dl,123.5,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-triglycerides::spec:serum-plasma,2020-06-03,152.0,mg/dl,152.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-triglycerides::spec:serum-plasma,2021-10-01,79.0,mg/dl,79.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-triglycerides::spec:serum-plasma,2023-06-23,121.0,mg/dl,121.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-triglycerides::spec:serum-plasma,2023-09-16,173.0,mg/dl,173.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-triglycerides::spec:serum-plasma,2025-04-11,149.0,mg/dl,149.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-uric-acid::spec:serum-plasma,2020-06-03,4.5,mg/dl,4.5,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-uric-acid::spec:serum-plasma,2021-10-01,5.0,mg/dl,5.0,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-uric-acid::spec:serum-plasma,2023-06-23,5.4,mg/dl,5.4,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-uric-acid::spec:serum-plasma,2023-09-16,6.09,mg/dl,6.09,mg/dl,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:serum-vldl-cholestrol::spec:serum-plasma,2019-11-02,24.7,mg/dl,24.7,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-vldl-cholestrol::spec:serum-plasma,2020-06-03,30.4,mg/dl,30.4,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-vldl-cholestrol::spec:serum-plasma,2021-10-01,15.8,mg/dl,15.8,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-vldl-cholestrol::spec:serum-plasma,2023-06-23,24.2,mg/dl,24.2,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-vldl-cholestrol::spec:serum-plasma,2023-09-16,34.6,mg/dl,34.6,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:serum-vldl-cholestrol::spec:serum-plasma,2025-04-11,29.8,mg/dl,29.8,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:sgot-sgpt-ratio::spec:serum-plasma,2020-06-03,0.82,Ratio,0.82,Ratio,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:sgot-sgpt-ratio::spec:serum-plasma,2021-10-01,0.78,Ratio,0.78,Ratio,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:sgot-sgpt-ratio::spec:serum-plasma,2023-09-16,1.16,Ratio,1.16,Ratio,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:testosterone::spec:serum-plasma,2019-11-02,272.62,ng/ml,272.62,ng/ml,Testosterone,manual_sheet_v1,,,,1.0
+bio:testosterone::spec:serum-plasma,2023-09-16,241.7,ng/ml,241.7,ng/ml,Testosterone,manual_sheet_v1,,,,1.0
+bio:thyroid-stimulating-hormone-tsh-ultrasensitive::spec:serum-plasma,2019-11-02,1.15,μIU/L,1.15,μIU/L,Thyroid Profile,manual_sheet_v1,,,,1.0
+bio:thyroid-stimulating-hormone-tsh-ultrasensitive::spec:serum-plasma,2020-06-03,1.28,μIU/L,1.28,μIU/L,Thyroid Profile,manual_sheet_v1,,,,1.0
+bio:thyroid-stimulating-hormone-tsh-ultrasensitive::spec:serum-plasma,2021-10-01,0.947,μIU/L,0.947,μIU/L,Thyroid Profile,manual_sheet_v1,,,,1.0
+bio:thyroid-stimulating-hormone-tsh-ultrasensitive::spec:serum-plasma,2023-09-16,1.14,μIU/L,1.14,μIU/L,Thyroid Profile,manual_sheet_v1,,,,1.0
+bio:tibc::spec:serum-plasma,2023-09-16,305.0,μmol/L,305.0,μmol/L,Liver Function Test,manual_sheet_v1,,,,1.0
+bio:total-cholestrol-to-hdl-ratio::spec:serum-plasma,2019-11-02,5.0,Ratio,5.0,Ratio,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:total-cholestrol-to-hdl-ratio::spec:serum-plasma,2020-06-03,5.2,Ratio,5.2,Ratio,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:total-cholestrol-to-hdl-ratio::spec:serum-plasma,2021-10-01,4.2,Ratio,4.2,Ratio,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:total-cholestrol-to-hdl-ratio::spec:serum-plasma,2023-06-23,5.8,Ratio,5.8,Ratio,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:total-cholestrol-to-hdl-ratio::spec:serum-plasma,2023-09-16,5.8,Ratio,5.8,Ratio,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:total-cholestrol-to-hdl-ratio::spec:serum-plasma,2025-04-11,4.7,Ratio,4.7,Ratio,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:total-cholestrol::spec:serum-plasma,2019-11-02,202.3,mg/dl,202.3,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:total-cholestrol::spec:serum-plasma,2020-06-03,170.0,mg/dl,170.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:total-cholestrol::spec:serum-plasma,2021-10-01,174.0,mg/dl,174.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:total-cholestrol::spec:serum-plasma,2023-06-23,225.0,mg/dl,225.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:total-cholestrol::spec:serum-plasma,2023-09-16,213.0,mg/dl,213.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:total-cholestrol::spec:serum-plasma,2025-04-11,191.0,mg/dl,191.0,mg/dl,Lipid Profile,manual_sheet_v1,,,,1.0
+bio:total-leucocyte-count-tlc::spec:serum-plasma,2020-06-03,5.3,10^3/μL,5.3,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:total-leucocyte-count-tlc::spec:serum-plasma,2021-10-01,4.6,10^3/μL,4.6,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:total-leucocyte-count-tlc::spec:serum-plasma,2023-09-16,5.6,10^3/μL,5.6,10^3/μL,Complete Haemogram,manual_sheet_v1,,,,1.0
+bio:urea-creatinine-ratio::spec:serum-plasma,2021-10-01,34.25,Ratio,34.25,Ratio,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:urea-creatinine-ratio::spec:serum-plasma,2023-09-16,33.84,Ratio,33.84,Ratio,Kidney Function Test 1,manual_sheet_v1,,,,1.0
+bio:vitamin-b12::spec:serum-plasma,2021-10-01,659.0,pg/ml,659.0,pg/ml,Vitamin B12,manual_sheet_v1,,,,1.0
+bio:vitamin-b12::spec:serum-plasma,2023-09-16,195.0,pg/ml,195.0,pg/ml,Vitamin B12,manual_sheet_v1,,,,1.0
+bio:vitamin-d-25-hydroxy::spec:serum-plasma,2021-10-01,15.51,ng/ml,15.51,ng/ml,Vitamin D,manual_sheet_v1,,,,1.0
+bio:vitamin-d-25-hydroxy::spec:serum-plasma,2023-06-23,8.7,ng/ml,8.7,ng/ml,Vitamin D,manual_sheet_v1,,,,1.0
+bio:vitamin-d-25-hydroxy::spec:serum-plasma,2023-09-16,19.9,ng/ml,19.9,ng/ml,Vitamin D,manual_sheet_v1,,,,1.0
