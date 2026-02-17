@@ -18,6 +18,8 @@ class ExtractedRow:
     reference_range: Optional[str]
     page: int
     row_index: int
+    section: Optional[str] = None  # Parent section for context (e.g., "Differential Leucocyte Count")
+    flag: Optional[str] = None  # Abnormal value indicator: 'L' for Low, 'H' for High
 
 
 @dataclass
@@ -41,34 +43,38 @@ class PDFExtractor:
 
     # Common patterns for lab values
     VALUE_PATTERN = re.compile(r"^[\d.,]+$")
+    
+    # Flags indicating abnormal values (Low/High)
+    ABNORMAL_FLAGS = re.compile(r"\s*[LH]\*?\s*$", re.IGNORECASE)
+    
     UNIT_PATTERNS = [
-        r"mg/dl",
-        r"mg/dL",
-        r"g/dl",
-        r"g/dL",
-        r"mmol/l",
-        r"mmol/L",
-        r"umol/l",
-        r"μmol/L",
-        r"mEq/L",
-        r"meq/l",
-        r"IU/L",
-        r"U/L",
-        r"%",
-        r"cells/uL",
-        r"cells/μL",
-        r"x10\^9/L",
-        r"x10\^12/L",
-        r"fl",
-        r"fL",
+        # Concentration units
+        r"mg/dl", r"mg/dL",
+        r"g/dl", r"g/dL", r"g/L",
+        r"mmol/l", r"mmol/L",
+        r"umol/l", r"umol/L", r"μmol/L",
+        r"mEq/L", r"meq/l",
+        r"ng/ml", r"ng/mL", r"ng/dL",
+        r"pg/ml", r"pg/mL",
+        r"ug/dL", r"µg/dL", r"mcg/dL",
+        # Enzyme units
+        r"IU/L", r"U/L", r"IU/mL", r"mIU/mL", r"mIU/L",
+        # Cell counts - critical for CBC
+        r"10\^3/µl", r"10\^3/uL", r"10\^3/µL",
+        r"10\^6/µl", r"10\^6/uL", r"10\^6/µL",
+        r"10\^9/L", r"x10\^9/L",
+        r"10\^12/L", r"x10\^12/L",
+        r"cells/uL", r"cells/µL", r"cells/μL",
+        r"/µL", r"/uL", r"/µl",
+        r"thou/µL", r"mill/µL",
+        # RBC indices
+        r"fl", r"fL",
         r"pg",
-        r"ng/ml",
-        r"ng/mL",
-        r"pg/ml",
-        r"pg/mL",
-        r"mIU/mL",
-        r"seconds",
-        r"sec",
+        r"%",
+        # Time
+        r"seconds", r"sec", r"mm/hr", r"mm/hour",
+        # Ratios and others
+        r"ratio", r"index",
     ]
 
     def __init__(self):
@@ -101,6 +107,7 @@ class PDFExtractor:
         try:
             with pdfplumber.open(pdf_path) as pdf:
                 page_count = len(pdf.pages)
+                current_section: Optional[str] = None
 
                 for page_num, page in enumerate(pdf.pages, start=1):
                     # Extract tables from this page
@@ -119,13 +126,22 @@ class PDFExtractor:
                             if first_cell in (
                                 "test",
                                 "test name",
+                                "test description",
                                 "parameter",
                                 "analyte",
+                                "value(s)",
                                 "",
                             ):
                                 continue
 
-                            extracted = self._parse_row(row, page_num, row_idx)
+                            # Check if this is a section header (has label but no value)
+                            if self._is_section_header(row):
+                                current_section = str(row[0] or "").strip()
+                                # Clean up section name (remove newlines, extra whitespace)
+                                current_section = " ".join(current_section.split())
+                                continue
+
+                            extracted = self._parse_row(row, page_num, row_idx, current_section)
                             if extracted:
                                 rows.append(extracted)
 
@@ -140,8 +156,41 @@ class PDFExtractor:
             errors=errors,
         )
 
+    def _is_section_header(self, row: list) -> bool:
+        """
+        Check if this row is a section header (has a label but no value/unit/range).
+        
+        Section headers like "Differential Leucocyte Count" or "RBC Parameters"
+        provide context for the rows that follow.
+        """
+        if not row or not row[0]:
+            return False
+        
+        first_cell = str(row[0] or "").strip()
+        if not first_cell:
+            return False
+        
+        # Check if remaining cells are empty or None
+        other_cells = row[1:] if len(row) > 1 else []
+        has_values = any(
+            str(cell or "").strip() 
+            for cell in other_cells 
+            if cell is not None
+        )
+        
+        # It's a section header if:
+        # 1. First cell has text
+        # 2. No values in other cells
+        # 3. Doesn't look like a data row that failed to parse
+        if not has_values:
+            # Additional check: section headers typically don't contain numbers at the start
+            if not re.match(r"^\d", first_cell):
+                return True
+        
+        return False
+
     def _parse_row(
-        self, row: list, page: int, row_index: int
+        self, row: list, page: int, row_index: int, section: Optional[str] = None
     ) -> Optional[ExtractedRow]:
         """
         Parse a table row into structured data.
@@ -165,13 +214,18 @@ class PDFExtractor:
         value: Optional[str] = None
         unit: Optional[str] = None
         reference_range: Optional[str] = None
+        flag: Optional[str] = None
 
         # Try to find value and unit in remaining cells
         for cell in non_empty[1:]:
             # Check if this cell contains a numeric value
             if value is None and self._looks_like_value(cell):
+                # Extract any abnormal flag (L*/H*) from the value
+                cell_clean, extracted_flag = self._extract_value_and_flag(cell)
+                if extracted_flag:
+                    flag = extracted_flag
                 # Check if unit is attached to value
-                value, extracted_unit = self._split_value_unit(cell)
+                value, extracted_unit = self._split_value_unit(cell_clean)
                 if extracted_unit and unit is None:
                     unit = extracted_unit
             # Check if this cell is a unit
@@ -185,6 +239,9 @@ class PDFExtractor:
         if not label or not value:
             return None
 
+        # Clean up the label (remove method annotations like "colorimetric", "Calculated")
+        label = self._clean_label(label)
+
         return ExtractedRow(
             label=label,
             value=value,
@@ -192,7 +249,30 @@ class PDFExtractor:
             reference_range=reference_range,
             page=page,
             row_index=row_index,
+            section=section,
+            flag=flag,
         )
+
+    def _clean_label(self, label: str) -> str:
+        """
+        Clean up a label by removing method annotations and extra whitespace.
+        
+        Examples:
+            "Hemoglobin\ncolorimetric" -> "Hemoglobin"
+            "RBC Count\nElectrical impedance" -> "RBC Count"
+            "PDW *\nCalculated" -> "PDW"
+        """
+        # Split on newline and take the first part (the actual test name)
+        if "\n" in label:
+            label = label.split("\n")[0]
+        
+        # Remove asterisks and clean up
+        label = label.replace("*", "").strip()
+        
+        # Remove trailing periods (some labs use "Neutrophils." to distinguish)
+        label = label.rstrip(".")
+        
+        return label
 
     def _is_header_row(self, label: str) -> bool:
         """Check if this looks like a header row."""
@@ -213,11 +293,28 @@ class PDFExtractor:
 
     def _looks_like_value(self, cell: str) -> bool:
         """Check if cell looks like a numeric value."""
-        # Remove common value indicators
-        cleaned = cell.replace(",", "").replace(" ", "")
+        # Remove common value indicators and abnormal flags
+        cleaned = self.ABNORMAL_FLAGS.sub("", cell)
+        cleaned = cleaned.replace(",", "").replace(" ", "")
         # Check for numeric pattern (possibly with unit attached)
         match = re.match(r"^[\d.]+", cleaned)
         return bool(match)
+    
+    def _extract_value_and_flag(self, cell: str) -> tuple[str, Optional[str]]:
+        """
+        Extract the numeric value and any abnormal flag (L*/H*).
+        
+        Returns:
+            tuple of (clean_value, flag) where flag is 'L', 'H', or None
+        """
+        flag = None
+        match = self.ABNORMAL_FLAGS.search(cell)
+        if match:
+            flag_text = match.group().strip().upper().replace("*", "")
+            if flag_text in ("L", "H"):
+                flag = flag_text
+            cell = self.ABNORMAL_FLAGS.sub("", cell).strip()
+        return cell, flag
 
     def _looks_like_unit(self, cell: str) -> bool:
         """Check if cell looks like a unit."""
