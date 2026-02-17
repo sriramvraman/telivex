@@ -35,6 +35,7 @@ export interface LabEventResponse {
   unit_original: string;
   page: number | null;
   confidence: number;
+  flag: "H" | "L" | null;  // H=High, L=Low, null=Normal
 }
 
 // Unmapped Row types

@@ -104,18 +104,53 @@ function BiomarkerDetailModal({
 
         <div className="p-6 space-y-6">
           {/* Current Value */}
-          <div className="bg-blue-50 rounded-lg p-4">
-            <p className="text-sm text-blue-600 font-medium mb-1">
-              Your Value
-            </p>
-            <p className="text-3xl font-bold text-blue-700">
+          <div className={`rounded-lg p-4 ${
+            event.flag
+              ? event.flag === "H"
+                ? "bg-red-50"
+                : "bg-orange-50"
+              : "bg-blue-50"
+          }`}>
+            <div className="flex items-center justify-between mb-1">
+              <p className={`text-sm font-medium ${
+                event.flag
+                  ? event.flag === "H"
+                    ? "text-red-600"
+                    : "text-orange-600"
+                  : "text-blue-600"
+              }`}>
+                Your Value
+              </p>
+              {event.flag && (
+                <span className={`text-xs px-2 py-1 rounded font-bold ${
+                  event.flag === "H"
+                    ? "bg-red-500 text-white"
+                    : "bg-orange-500 text-white"
+                }`}>
+                  {event.flag === "H" ? "↑ HIGH" : "↓ LOW"}
+                </span>
+              )}
+            </div>
+            <p className={`text-3xl font-bold ${
+              event.flag
+                ? event.flag === "H"
+                  ? "text-red-700"
+                  : "text-orange-700"
+                : "text-blue-700"
+            }`}>
               {event.value_normalized?.toFixed(2) ?? event.value_original}
               <span className="text-lg font-normal ml-2">
                 {event.unit_canonical ?? event.unit_original}
               </span>
             </p>
             {event.value_original !== event.value_normalized && (
-              <p className="text-sm text-blue-500 mt-1">
+              <p className={`text-sm mt-1 ${
+                event.flag
+                  ? event.flag === "H"
+                    ? "text-red-500"
+                    : "text-orange-500"
+                  : "text-blue-500"
+              }`}>
                 Original: {event.value_original} {event.unit_original}
               </p>
             )}
@@ -311,13 +346,36 @@ function DocumentDetail({ document, onClose, onDelete }: DocumentDetailProps) {
                         key={event.event_id}
                         type="button"
                         onClick={() => setSelectedEvent(event)}
-                        className="w-full text-left p-3 rounded-lg bg-gray-50 hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-colors"
+                        className={`w-full text-left p-3 rounded-lg hover:border-blue-200 border transition-colors ${
+                          event.flag
+                            ? event.flag === "H"
+                              ? "bg-red-50 border-red-200"
+                              : "bg-orange-50 border-orange-200"
+                            : "bg-gray-50 border-transparent hover:bg-blue-50"
+                        }`}
                       >
                         <div className="flex justify-between items-center">
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-gray-900 flex items-center gap-2">
                             {event.analyte_name || event.biomarker_id}
+                            {event.flag && (
+                              <span
+                                className={`text-xs px-1.5 py-0.5 rounded font-bold ${
+                                  event.flag === "H"
+                                    ? "bg-red-500 text-white"
+                                    : "bg-orange-500 text-white"
+                                }`}
+                              >
+                                {event.flag === "H" ? "↑ HIGH" : "↓ LOW"}
+                              </span>
+                            )}
                           </span>
-                          <span className="text-blue-600 font-semibold">
+                          <span className={`font-semibold ${
+                            event.flag
+                              ? event.flag === "H"
+                                ? "text-red-600"
+                                : "text-orange-600"
+                              : "text-blue-600"
+                          }`}>
                             {event.value_normalized?.toFixed(2) ??
                               event.value_original}{" "}
                             <span className="text-gray-500 font-normal text-sm">

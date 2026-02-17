@@ -126,10 +126,34 @@ function BiomarkerDetailModal({
 
         <ScrollView style={modalStyles.content}>
           {/* Current Value */}
-          <View style={modalStyles.valueCard}>
-            <Text style={modalStyles.valueLabel}>Your Value</Text>
+          <View style={[
+            modalStyles.valueCard,
+            event.flag === "H" && modalStyles.valueCardHigh,
+            event.flag === "L" && modalStyles.valueCardLow,
+          ]}>
+            <View style={modalStyles.valueLabelRow}>
+              <Text style={[
+                modalStyles.valueLabel,
+                event.flag === "H" && modalStyles.valueLabelHigh,
+                event.flag === "L" && modalStyles.valueLabelLow,
+              ]}>Your Value</Text>
+              {event.flag && (
+                <View style={[
+                  modalStyles.flagBadge,
+                  event.flag === "H" ? modalStyles.flagBadgeHigh : modalStyles.flagBadgeLow
+                ]}>
+                  <Text style={modalStyles.flagBadgeText}>
+                    {event.flag === "H" ? "↑ HIGH" : "↓ LOW"}
+                  </Text>
+                </View>
+              )}
+            </View>
             <View style={modalStyles.valueRow}>
-              <Text style={modalStyles.valueNumber}>
+              <Text style={[
+                modalStyles.valueNumber,
+                event.flag === "H" && modalStyles.valueNumberHigh,
+                event.flag === "L" && modalStyles.valueNumberLow,
+              ]}>
                 {event.value_normalized.toFixed(2)}
               </Text>
               <Text style={modalStyles.valueUnit}>{event.unit_canonical}</Text>
@@ -381,20 +405,40 @@ export function DocumentDetailScreen() {
                   {categoryEvents.map((event) => (
                     <TouchableOpacity
                       key={event.event_id}
-                      style={styles.eventCard}
+                      style={[
+                        styles.eventCard,
+                        event.flag === "H" && styles.eventCardHigh,
+                        event.flag === "L" && styles.eventCardLow,
+                      ]}
                       onPress={() => setSelectedEvent(event)}
                       activeOpacity={0.7}
                     >
                       <View style={styles.eventHeader}>
-                        <Text style={styles.analyteName}>
-                          {event.analyte_name}
-                        </Text>
+                        <View style={styles.analyteNameRow}>
+                          <Text style={styles.analyteName}>
+                            {event.analyte_name}
+                          </Text>
+                          {event.flag && (
+                            <View style={[
+                              styles.flagBadge,
+                              event.flag === "H" ? styles.flagBadgeHigh : styles.flagBadgeLow
+                            ]}>
+                              <Text style={styles.flagBadgeText}>
+                                {event.flag === "H" ? "↑ HIGH" : "↓ LOW"}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
                         <Text style={styles.confidence}>
                           {(event.confidence * 100).toFixed(0)}%
                         </Text>
                       </View>
                       <View style={styles.eventBody}>
-                        <Text style={styles.value}>
+                        <Text style={[
+                          styles.value,
+                          event.flag === "H" && styles.valueHigh,
+                          event.flag === "L" && styles.valueLow,
+                        ]}>
                           {event.value_normalized.toFixed(2)}{" "}
                           <Text style={styles.unit}>{event.unit_canonical}</Text>
                         </Text>
@@ -597,17 +641,46 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "transparent",
   },
+  eventCardHigh: {
+    backgroundColor: "#fef2f2",
+    borderColor: "#fecaca",
+  },
+  eventCardLow: {
+    backgroundColor: "#fff7ed",
+    borderColor: "#fed7aa",
+  },
   eventHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
   },
+  analyteNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: 8,
+  },
   analyteName: {
     fontSize: 14,
     fontWeight: "600",
     color: "#1f2937",
-    flex: 1,
+  },
+  flagBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  flagBadgeHigh: {
+    backgroundColor: "#ef4444",
+  },
+  flagBadgeLow: {
+    backgroundColor: "#f97316",
+  },
+  flagBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#fff",
   },
   confidence: {
     fontSize: 11,
@@ -625,6 +698,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#2563eb",
+  },
+  valueHigh: {
+    color: "#dc2626",
+  },
+  valueLow: {
+    color: "#ea580c",
   },
   unit: {
     fontSize: 13,
@@ -741,11 +820,44 @@ const modalStyles = StyleSheet.create({
     padding: 20,
     marginBottom: 20,
   },
+  valueCardHigh: {
+    backgroundColor: "#fef2f2",
+  },
+  valueCardLow: {
+    backgroundColor: "#fff7ed",
+  },
+  valueLabelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   valueLabel: {
     fontSize: 14,
     color: "#2563eb",
     fontWeight: "600",
-    marginBottom: 8,
+  },
+  valueLabelHigh: {
+    color: "#dc2626",
+  },
+  valueLabelLow: {
+    color: "#ea580c",
+  },
+  flagBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  flagBadgeHigh: {
+    backgroundColor: "#ef4444",
+  },
+  flagBadgeLow: {
+    backgroundColor: "#f97316",
+  },
+  flagBadgeText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#fff",
   },
   valueRow: {
     flexDirection: "row",
@@ -756,6 +868,12 @@ const modalStyles = StyleSheet.create({
     fontSize: 36,
     fontWeight: "700",
     color: "#1e40af",
+  },
+  valueNumberHigh: {
+    color: "#b91c1c",
+  },
+  valueNumberLow: {
+    color: "#c2410c",
   },
   valueUnit: {
     fontSize: 18,

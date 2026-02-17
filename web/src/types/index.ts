@@ -42,6 +42,7 @@ export interface LabEvent {
   confidence: number;
   source_type: "pdf" | "manual" | "import";
   created_at: string;
+  flag: "H" | "L" | null;  // H=High, L=Low, null=Normal
 }
 
 /** Unmapped row from extraction */
