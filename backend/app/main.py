@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.api.routes import biomarkers, documents
+from app.api.routes import biomarkers, documents, events, trends
 
 settings = get_settings()
 
@@ -24,6 +24,8 @@ app.add_middleware(
 # Routes
 app.include_router(biomarkers.router, prefix=settings.api_prefix)
 app.include_router(documents.router, prefix=settings.api_prefix)
+app.include_router(events.router, prefix=settings.api_prefix)
+app.include_router(trends.router, prefix=settings.api_prefix)
 
 
 @app.get("/health")
