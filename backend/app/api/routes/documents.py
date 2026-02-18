@@ -95,6 +95,10 @@ async def upload_document(
     normalizer = UnitNormalizer()
     event_repo = LabEventRepository(db)
     unmapped_repo = UnmappedRowRepository(db)
+    
+    # DEBUG: Log alias map size
+    print(f"DEBUG: Canonicalizer loaded {len(canonicalizer._alias_map)} aliases")
+    print(f"DEBUG: Sample aliases - 'rbc count' in map: {'rbc count' in canonicalizer._alias_map}")
 
     # Parse collected date: user-provided > extracted from PDF > current date
     parsed_date = None
@@ -122,11 +126,10 @@ async def upload_document(
 
     # Process each extracted row
     for row in extraction_result.rows:
-        # Try to canonicalize the label
-        canon_result = canonicalizer.canonicalize(row.label)
-
+        # Try to canonicalize the label (with section context for disambiguation)
+        canon_result = canonicalizer.canonicalize(row.label, section=row.section)
+        
         if not canon_result.matched:
-            # Store as unmapped row
             unmapped_repo.create(
                 document_id=document.document_id,
                 raw_label=row.label,
@@ -139,14 +142,24 @@ async def upload_document(
 
         # Matched - normalize the unit
         assert canon_result.match is not None
-        norm_result = normalizer.normalize(
-            value=row.value or "0",
-            unit=row.unit,
-            canonical_unit=canon_result.match.canonical_unit,
-        )
+        try:
+            norm_result = normalizer.normalize(
+                value=row.value or "0",
+                unit=row.unit,
+                canonical_unit=canon_result.match.canonical_unit,
+            )
+        except Exception as e:
+            unmapped_repo.create(
+                document_id=document.document_id,
+                raw_label=row.label,
+                raw_value=row.value,
+                raw_unit=row.unit,
+                page=row.page,
+            )
+            unmapped_count += 1
+            continue
 
         if not norm_result.success:
-            # Unit conversion failed - store as unmapped
             unmapped_repo.create(
                 document_id=document.document_id,
                 raw_label=row.label,

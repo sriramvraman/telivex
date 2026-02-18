@@ -37,6 +37,8 @@ class UnitNormalizer:
         ("mg/dl", "mg/dl"): 1.0,
         ("mg/dl", "mg/dL"): 1.0,
         ("g/dl", "g/dL"): 1.0,
+        ("g/dl", "g/dl"): 1.0,
+        ("g/dl", "gm%"): 1.0,  # g/dL = grams per deciliter = gm%
         ("g/dl", "mg/dl"): 1000.0,
         ("mg/l", "mg/dl"): 0.1,
         ("g/l", "g/dl"): 0.1,
@@ -54,6 +56,10 @@ class UnitNormalizer:
         ("iu/l", "IU/L"): 1.0,
         ("u/l", "U/L"): 1.0,
         ("u/l", "IU/L"): 1.0,
+        ("u/l", "Units per litre (U/L)"): 1.0,  # Verbose format in registry
+        # ESR
+        ("mm/hr", "mm/1st-hr."): 1.0,  # ESR units
+        ("mm/hr", "mm/hr"): 1.0,
         # Electrolytes
         ("meq/l", "mEq/L"): 1.0,
         ("mmol/l", "mEq/L"): 1.0,  # For monovalent ions
@@ -66,6 +72,16 @@ class UnitNormalizer:
         ("x10^6/ul", "x10^12/L"): 1.0,
         ("10^3/ul", "x10^9/L"): 1.0,
         ("10^6/ul", "x10^12/L"): 1.0,
+        # CBC counts - common lab formats to registry formats
+        ("10^6/µl", "millions/cumm"): 1.0,  # RBC count
+        ("10^3/µl", "10^3/µl"): 1.0,  # WBC/platelet counts
+        ("10^3/µl", "10^3/μL"): 1.0,  # micro sign to Greek mu
+        ("10^3/µl", "cumm"): 1000.0,  # x1000 to get per cumm
+        ("10^3/µl", "/cumm"): 1000.0,
+        ("10^9/l", "10^3/µl"): 1.0,  # Same thing different notation
+        # fL conversions
+        ("fl", "FL"): 1.0,
+        ("fl", "fL"): 1.0,
         # Percentages
         ("%", "%"): 1.0,
         ("percent", "%"): 1.0,
@@ -88,7 +104,24 @@ class UnitNormalizer:
         ("s", "seconds"): 1.0,
         # Ratios (dimensionless)
         ("ratio", "ratio"): 1.0,
+        ("ratio", "Ratio"): 1.0,
+        ("%", "Ratio"): 0.01,  # Convert percentage to ratio
         ("", ""): 1.0,  # No unit
+        ("", "Ratio"): 1.0,  # No unit to ratio (already a ratio)
+        # Thyroid units  
+        ("ng/dl", "ng/dL"): 1.0,
+        ("ng/dl", "pg/ml"): 10.0,  # ng/dL to pg/mL conversion
+        ("µg/dl", "µg/dL"): 1.0,
+        ("µg/dl", "ng/dL"): 1000.0,  # T4: µg/dL to ng/dL
+        ("µg/dl", "ng/dl"): 1000.0,
+        ("miu/l", "mIU/L"): 1.0,
+        ("miu/l", "µIU/mL"): 1.0,
+        ("miu/l", "µIU/L"): 1000.0,  # mIU/L to µIU/L (milli to micro)
+        ("miu/l", "μIU/L"): 1000.0,  # mIU/L to μIU/L (Greek mu)
+        # Iron: µg/dL to ng/mL (same value, different notation)
+        ("µg/dl", "ng/ml"): 10.0,  # 1 µg/dL = 10 ng/mL
+        # Handle None/missing unit to g/dl (albumin without unit)
+        ("", "g/dl"): 1.0,
     }
 
     # Aliases for unit normalization
@@ -138,12 +171,21 @@ class UnitNormalizer:
         "x10^6/uL": "x10^6/ul",
         "10^6/ul": "10^6/ul",
         "10^6/uL": "10^6/ul",
+        "10^6/µl": "10^6/µl",
+        "10^6/μl": "10^6/µl",  # Greek mu
+        "10^3/µl": "10^3/µl",
+        "10^3/μl": "10^3/µl",  # Greek mu
+        "10^3/μL": "10^3/µl",  # Greek mu uppercase L
+        "µg/dL": "µg/dl",
+        "μg/dL": "µg/dl",  # Greek mu
+        "mm/hr": "mm/hr",
         "seconds": "seconds",
         "sec": "sec",
         "secs": "sec",
         "s": "s",
         "miu/ml": "miu/ml",
         "mIU/mL": "miu/ml",
+        "mIU/L": "miu/l",
         "uiu/ml": "uiu/ml",
         "μIU/mL": "uiu/ml",
     }
