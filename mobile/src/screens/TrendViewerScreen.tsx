@@ -2,7 +2,7 @@
  * Trend Viewer Screen - Displays biomarker trends over time with charts.
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,99 +11,105 @@ import {
   TouchableOpacity,
   Dimensions,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
-import { useTrends } from "../hooks";
-import type { BiomarkerTrend, TrendDataPoint } from "../types";
+import { apiClient } from "../api/client";
+import type { AvailableTrend, TrendResponse, TrendPoint } from "../types";
 
 const screenWidth = Dimensions.get("window").width;
 
-interface TrendCardProps {
-  trend: BiomarkerTrend;
-  onPress?: () => void;
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
-function TrendCard({ trend, onPress }: TrendCardProps) {
-  const dataPoints = trend.data_points;
+function getFlagColor(flag: "H" | "L" | null): string {
+  if (flag === "H") return "#dc2626"; // red
+  if (flag === "L") return "#f97316"; // orange
+  return "#2563eb"; // blue
+}
 
-  if (dataPoints.length === 0) {
-    return null;
+interface TrendDetailProps {
+  trend: TrendResponse;
+  onClose: () => void;
+}
+
+function TrendDetail({ trend, onClose }: TrendDetailProps) {
+  if (trend.points.length === 0) {
+    return (
+      <View style={styles.detailContainer}>
+        <View style={styles.detailHeader}>
+          <Text style={styles.detailTitle}>{trend.analyte_name}</Text>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <Text style={styles.closeButtonText}>✕</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.emptyText}>No data points</Text>
+      </View>
+    );
   }
 
-  // Sort by date
-  const sortedPoints = [...dataPoints].sort(
+  // Sort by date ascending
+  const sortedPoints = [...trend.points].sort(
     (a, b) => new Date(a.collected_at).getTime() - new Date(b.collected_at).getTime()
   );
 
   // Prepare chart data
-  const labels = sortedPoints.map((p) => {
-    const date = new Date(p.collected_at);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  });
-
+  const labels = sortedPoints.map((p) => formatDate(p.collected_at));
   const values = sortedPoints.map((p) => p.value);
   const latestValue = values[values.length - 1];
-  const previousValue = values.length > 1 ? values[values.length - 2] : null;
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
 
-  // Calculate trend direction
-  let trendDirection = "→";
-  let trendColor = "#6b7280";
-  if (previousValue !== null) {
-    if (latestValue > previousValue) {
-      trendDirection = "↑";
-      trendColor = "#dc2626"; // May need context - some biomarkers up is good
-    } else if (latestValue < previousValue) {
-      trendDirection = "↓";
-      trendColor = "#16a34a";
-    }
-  }
+  // Only show last 7 points in chart for readability
+  const chartLabels = labels.slice(-7);
+  const chartValues = values.slice(-7);
 
   const chartData = {
-    labels: labels.length > 5 ? labels.slice(-5) : labels,
-    datasets: [
-      {
-        data: values.length > 5 ? values.slice(-5) : values,
-        strokeWidth: 2,
-      },
-    ],
+    labels: chartLabels,
+    datasets: [{ data: chartValues, strokeWidth: 2 }],
   };
 
   return (
-    <TouchableOpacity style={styles.trendCard} onPress={onPress}>
-      <View style={styles.trendHeader}>
+    <View style={styles.detailContainer}>
+      <View style={styles.detailHeader}>
         <View>
-          <Text style={styles.analyteName}>{trend.analyte_name}</Text>
-          <Text style={styles.biomarkerId}>{trend.biomarker_id}</Text>
+          <Text style={styles.detailTitle}>{trend.analyte_name}</Text>
+          {trend.category && (
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>{trend.category}</Text>
+            </View>
+          )}
         </View>
-        <View style={styles.valueContainer}>
-          <Text style={styles.latestValue}>{latestValue.toFixed(2)}</Text>
-          <Text style={styles.unit}>{trend.unit}</Text>
-          <Text style={[styles.trendIndicator, { color: trendColor }]}>
-            {trendDirection}
-          </Text>
-        </View>
+        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <Text style={styles.closeButtonText}>✕</Text>
+        </TouchableOpacity>
       </View>
 
-      {values.length >= 2 && (
+      {/* Reference Range */}
+      {trend.reference_range && (
+        <View style={styles.referenceBox}>
+          <Text style={styles.referenceLabel}>Reference Range:</Text>
+          <Text style={styles.referenceValue}>{trend.reference_range}</Text>
+        </View>
+      )}
+
+      {/* Chart */}
+      {chartValues.length >= 2 && (
         <LineChart
           data={chartData}
           width={screenWidth - 64}
-          height={120}
+          height={150}
           chartConfig={{
             backgroundColor: "#fff",
             backgroundGradientFrom: "#fff",
             backgroundGradientTo: "#fff",
-            decimalPlaces: 1,
+            decimalPlaces: 2,
             color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
             labelColor: (opacity = 1) => `rgba(107, 114, 128, ${opacity})`,
-            style: {
-              borderRadius: 8,
-            },
-            propsForDots: {
-              r: "4",
-              strokeWidth: "2",
-              stroke: "#2563eb",
-            },
+            style: { borderRadius: 8 },
+            propsForDots: { r: "4", strokeWidth: "2", stroke: "#2563eb" },
           }}
           bezier
           style={styles.chart}
@@ -112,56 +118,160 @@ function TrendCard({ trend, onPress }: TrendCardProps) {
         />
       )}
 
-      <Text style={styles.dataPointCount}>
-        {dataPoints.length} measurement{dataPoints.length !== 1 ? "s" : ""}
-      </Text>
+      {/* Stats */}
+      <View style={styles.statsRow}>
+        <View style={styles.statBox}>
+          <Text style={styles.statLabel}>Latest</Text>
+          <Text style={styles.statValue}>
+            {latestValue.toFixed(2)} {trend.canonical_unit}
+          </Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={styles.statLabel}>Range</Text>
+          <Text style={styles.statValue}>
+            {minValue.toFixed(2)} - {maxValue.toFixed(2)}
+          </Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={styles.statLabel}>Points</Text>
+          <Text style={styles.statValue}>{trend.points.length}</Text>
+        </View>
+      </View>
+
+      {/* Data Table */}
+      <View style={styles.tableContainer}>
+        <View style={styles.tableHeader}>
+          <Text style={styles.tableHeaderText}>Date</Text>
+          <Text style={styles.tableHeaderText}>Value</Text>
+          <Text style={styles.tableHeaderText}>Source</Text>
+        </View>
+        {sortedPoints.slice(-10).reverse().map((point) => (
+          <View key={point.event_id} style={styles.tableRow}>
+            <Text style={styles.tableCell}>
+              {new Date(point.collected_at).toLocaleDateString("en-IN", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </Text>
+            <View style={styles.valueCell}>
+              <Text style={[styles.tableCell, { color: getFlagColor(point.flag) }]}>
+                {point.value.toFixed(2)} {point.unit}
+              </Text>
+              {point.flag && (
+                <View style={[styles.flagBadge, { backgroundColor: getFlagColor(point.flag) + "20" }]}>
+                  <Text style={[styles.flagText, { color: getFlagColor(point.flag) }]}>
+                    {point.flag === "H" ? "HIGH" : "LOW"}
+                  </Text>
+                </View>
+              )}
+            </View>
+            <Text style={[styles.tableCell, styles.sourceCell]}>
+              {point.page ? `Page ${point.page}` : "-"}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+interface TrendListItemProps {
+  item: AvailableTrend;
+  isSelected: boolean;
+  onPress: () => void;
+}
+
+function TrendListItem({ item, isSelected, onPress }: TrendListItemProps) {
+  return (
+    <TouchableOpacity
+      style={[styles.listItem, isSelected && styles.listItemSelected]}
+      onPress={onPress}
+    >
+      <View style={styles.listItemLeft}>
+        <Text style={styles.listItemName}>{item.biomarker_name}</Text>
+        {item.category && (
+          <View style={styles.categoryBadgeSmall}>
+            <Text style={styles.categoryTextSmall}>{item.category}</Text>
+          </View>
+        )}
+      </View>
+      <View style={styles.listItemRight}>
+        {item.latest_value !== null && (
+          <Text style={styles.listItemValue}>
+            {item.latest_value.toFixed(2)} {item.canonical_unit}
+          </Text>
+        )}
+        <Text style={styles.listItemCount}>
+          {item.event_count} {item.event_count === 1 ? "point" : "points"}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 }
 
 export function TrendViewerScreen() {
-  const { trends, loading, error, fetchAllTrends } = useTrends();
-  const [mockTrends, setMockTrends] = useState<BiomarkerTrend[]>([]);
+  const [availableTrends, setAvailableTrends] = useState<AvailableTrend[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedBiomarker, setSelectedBiomarker] = useState<AvailableTrend | null>(null);
+  const [trendDetail, setTrendDetail] = useState<TrendResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [trends, cats] = await Promise.all([
+        apiClient.listAvailableTrends(),
+        apiClient.listTrendCategories(),
+      ]);
+      setAvailableTrends(trends);
+      setCategories(cats);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || "Failed to load trends");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  const fetchTrendDetail = useCallback(async (biomarkerId: string) => {
+    setDetailLoading(true);
+    try {
+      const detail = await apiClient.getBiomarkerTrend(biomarkerId);
+      setTrendDetail(detail);
+    } catch (err: any) {
+      setError(err.message || "Failed to load trend details");
+    } finally {
+      setDetailLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetchAllTrends();
+    fetchData();
+  }, [fetchData]);
 
-    // Set up mock data for demonstration when API not ready
-    setMockTrends([
-      {
-        biomarker_id: "HBA1C",
-        analyte_name: "Hemoglobin A1c",
-        unit: "%",
-        data_points: [
-          { event_id: "1", collected_at: "2025-06-15", value: 6.2, unit: "%" },
-          { event_id: "2", collected_at: "2025-09-15", value: 5.9, unit: "%" },
-          { event_id: "3", collected_at: "2025-12-15", value: 5.7, unit: "%" },
-          { event_id: "4", collected_at: "2026-01-15", value: 5.5, unit: "%" },
-        ],
-      },
-      {
-        biomarker_id: "CHOL_TOTAL",
-        analyte_name: "Total Cholesterol",
-        unit: "mg/dL",
-        data_points: [
-          { event_id: "5", collected_at: "2025-06-15", value: 210, unit: "mg/dL" },
-          { event_id: "6", collected_at: "2025-12-15", value: 195, unit: "mg/dL" },
-          { event_id: "7", collected_at: "2026-01-15", value: 188, unit: "mg/dL" },
-        ],
-      },
-      {
-        biomarker_id: "CREAT",
-        analyte_name: "Creatinine",
-        unit: "mg/dL",
-        data_points: [
-          { event_id: "8", collected_at: "2025-09-15", value: 0.9, unit: "mg/dL" },
-          { event_id: "9", collected_at: "2026-01-15", value: 0.95, unit: "mg/dL" },
-        ],
-      },
-    ]);
-  }, [fetchAllTrends]);
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchData();
+  }, [fetchData]);
 
-  const displayTrends = trends.length > 0 ? trends : mockTrends;
+  const handleSelectBiomarker = (item: AvailableTrend) => {
+    setSelectedBiomarker(item);
+    fetchTrendDetail(item.biomarker_id);
+  };
+
+  const handleCloseTrend = () => {
+    setSelectedBiomarker(null);
+    setTrendDetail(null);
+  };
+
+  const filteredTrends = availableTrends.filter(
+    (item) => !selectedCategory || item.category === selectedCategory
+  );
 
   if (loading) {
     return (
@@ -173,33 +283,82 @@ export function TrendViewerScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Health Trends</Text>
-        <Text style={styles.subtitle}>
-          Track your biomarkers over time
-        </Text>
+        <Text style={styles.subtitle}>Track your biomarkers over time</Text>
       </View>
 
       {error && (
-        <View style={styles.infoBox}>
-          <Text style={styles.infoText}>
-            📊 Showing sample data. Upload lab reports to see your actual trends.
-          </Text>
+        <View style={styles.errorBox}>
+          <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
 
-      {displayTrends.length === 0 ? (
+      {/* Category Filter */}
+      {categories.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoryScroll}
+          contentContainerStyle={styles.categoryContainer}
+        >
+          <TouchableOpacity
+            style={[styles.categoryChip, !selectedCategory && styles.categoryChipActive]}
+            onPress={() => setSelectedCategory(null)}
+          >
+            <Text style={[styles.categoryChipText, !selectedCategory && styles.categoryChipTextActive]}>
+              All
+            </Text>
+          </TouchableOpacity>
+          {categories.map((cat) => (
+            <TouchableOpacity
+              key={cat}
+              style={[styles.categoryChip, selectedCategory === cat && styles.categoryChipActive]}
+              onPress={() => setSelectedCategory(cat)}
+            >
+              <Text style={[styles.categoryChipText, selectedCategory === cat && styles.categoryChipTextActive]}>
+                {cat}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+
+      {/* Trend Detail or List */}
+      {selectedBiomarker && trendDetail ? (
+        <View style={styles.detailWrapper}>
+          {detailLoading ? (
+            <ActivityIndicator size="large" color="#2563eb" />
+          ) : (
+            <TrendDetail trend={trendDetail} onClose={handleCloseTrend} />
+          )}
+        </View>
+      ) : filteredTrends.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No trend data yet</Text>
-          <Text style={styles.emptySubtext}>
-            Upload multiple lab reports to start tracking trends
+          <Text style={styles.emptyEmoji}>📊</Text>
+          <Text style={styles.emptyTitle}>No trend data yet</Text>
+          <Text style={styles.emptySubtitle}>
+            Upload lab reports to start tracking your biomarker trends
           </Text>
         </View>
       ) : (
-        <View style={styles.trendsContainer}>
-          {displayTrends.map((trend) => (
-            <TrendCard key={trend.biomarker_id} trend={trend} />
+        <View style={styles.listContainer}>
+          <Text style={styles.listTitle}>
+            Available Biomarkers ({filteredTrends.length})
+          </Text>
+          {filteredTrends.map((item) => (
+            <TrendListItem
+              key={item.biomarker_id}
+              item={item}
+              isSelected={selectedBiomarker?.biomarker_id === item.biomarker_id}
+              onPress={() => handleSelectBiomarker(item)}
+            />
           ))}
         </View>
       )}
@@ -236,92 +395,255 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#6b7280",
   },
-  infoBox: {
-    backgroundColor: "#dbeafe",
+  errorBox: {
+    backgroundColor: "#fee2e2",
     marginHorizontal: 16,
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
   },
-  infoText: {
-    color: "#1e40af",
+  errorText: {
+    color: "#dc2626",
     fontSize: 14,
   },
-  trendsContainer: {
-    padding: 16,
-    paddingTop: 0,
-  },
-  trendCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
+  categoryScroll: {
     marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  trendHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+  categoryContainer: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  categoryChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    marginRight: 8,
+  },
+  categoryChipActive: {
+    backgroundColor: "#2563eb",
+    borderColor: "#2563eb",
+  },
+  categoryChipText: {
+    fontSize: 14,
+    color: "#6b7280",
+  },
+  categoryChipTextActive: {
+    color: "#fff",
+  },
+  listContainer: {
+    padding: 16,
+  },
+  listTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
     marginBottom: 12,
   },
-  analyteName: {
-    fontSize: 18,
+  listItem: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  listItemSelected: {
+    borderColor: "#2563eb",
+    backgroundColor: "#eff6ff",
+  },
+  listItemLeft: {
+    flex: 1,
+  },
+  listItemName: {
+    fontSize: 16,
     fontWeight: "600",
     color: "#1f2937",
+    marginBottom: 4,
   },
-  biomarkerId: {
+  listItemRight: {
+    alignItems: "flex-end",
+  },
+  listItemValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#2563eb",
+    fontFamily: "monospace",
+  },
+  listItemCount: {
     fontSize: 12,
     color: "#9ca3af",
     marginTop: 2,
   },
-  valueContainer: {
-    alignItems: "flex-end",
-    flexDirection: "row",
-    gap: 4,
+  categoryBadgeSmall: {
+    backgroundColor: "#f3f4f6",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignSelf: "flex-start",
   },
-  latestValue: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#2563eb",
-  },
-  unit: {
-    fontSize: 14,
+  categoryTextSmall: {
+    fontSize: 11,
     color: "#6b7280",
-    marginBottom: 2,
   },
-  trendIndicator: {
-    fontSize: 18,
+  detailWrapper: {
+    padding: 16,
+  },
+  detailContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+  },
+  detailHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
+  },
+  detailTitle: {
+    fontSize: 20,
     fontWeight: "700",
-    marginLeft: 4,
+    color: "#1f2937",
+  },
+  categoryBadge: {
+    backgroundColor: "#f3f4f6",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginTop: 4,
+    alignSelf: "flex-start",
+  },
+  categoryText: {
+    fontSize: 12,
+    color: "#6b7280",
+  },
+  closeButton: {
+    padding: 8,
+  },
+  closeButtonText: {
+    fontSize: 20,
+    color: "#9ca3af",
+  },
+  referenceBox: {
+    backgroundColor: "#dbeafe",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    flexDirection: "row",
+    gap: 8,
+  },
+  referenceLabel: {
+    fontSize: 14,
+    color: "#1e40af",
+    fontWeight: "600",
+  },
+  referenceValue: {
+    fontSize: 14,
+    color: "#1e3a8a",
   },
   chart: {
     marginVertical: 8,
     borderRadius: 8,
-    marginLeft: -16,
+    marginLeft: -8,
   },
-  dataPointCount: {
+  statsRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginVertical: 16,
+  },
+  statBox: {
+    flex: 1,
+    backgroundColor: "#f9fafb",
+    padding: 12,
+    borderRadius: 8,
+  },
+  statLabel: {
     fontSize: 12,
+    color: "#6b7280",
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1f2937",
+  },
+  tableContainer: {
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#f9fafb",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+  },
+  tableHeaderText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6b7280",
+  },
+  tableRow: {
+    flexDirection: "row",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+  },
+  tableCell: {
+    flex: 1,
+    fontSize: 13,
+    color: "#374151",
+  },
+  valueCell: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  sourceCell: {
     color: "#9ca3af",
     textAlign: "right",
-    marginTop: 4,
+  },
+  flagBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  flagText: {
+    fontSize: 10,
+    fontWeight: "600",
   },
   emptyContainer: {
     alignItems: "center",
     padding: 40,
   },
-  emptyText: {
+  emptyEmoji: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  emptyTitle: {
     fontSize: 18,
     fontWeight: "600",
     color: "#6b7280",
     marginBottom: 8,
   },
-  emptySubtext: {
+  emptySubtitle: {
     fontSize: 14,
     color: "#9ca3af",
     textAlign: "center",
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#6b7280",
+    textAlign: "center",
+    padding: 20,
   },
 });

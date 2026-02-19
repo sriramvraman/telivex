@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { getTrend, listAvailableTrends } from "../api/client";
+import React, { useState } from "react";
+import { getTrend, listAvailableTrends, listTrendCategories } from "../api/client";
 import { useApi } from "../hooks/useApi";
 import type { Trend } from "../types";
 
@@ -15,6 +15,18 @@ interface TrendChartProps {
   trend: Trend;
 }
 
+function getFlagColor(flag: "H" | "L" | null): string {
+  if (flag === "H") return "bg-red-500";
+  if (flag === "L") return "bg-orange-500";
+  return "bg-blue-500";
+}
+
+function getFlagBadge(flag: "H" | "L" | null): React.ReactNode {
+  if (flag === "H") return <span className="ml-2 px-1.5 py-0.5 text-xs bg-red-100 text-red-700 rounded">HIGH</span>;
+  if (flag === "L") return <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-100 text-orange-700 rounded">LOW</span>;
+  return null;
+}
+
 function TrendChart({ trend }: TrendChartProps) {
   if (trend.points.length === 0) {
     return <p className="text-gray-500">No data points</p>;
@@ -28,6 +40,14 @@ function TrendChart({ trend }: TrendChartProps) {
 
   return (
     <div className="space-y-4">
+      {/* Reference range info */}
+      {trend.reference_range && (
+        <div className="bg-blue-50 border border-blue-200 rounded px-3 py-2 text-sm">
+          <span className="text-blue-700 font-medium">Reference Range: </span>
+          <span className="text-blue-900">{trend.reference_range}</span>
+        </div>
+      )}
+
       {/* Simple bar visualization */}
       <div className="flex items-end gap-1 h-32 bg-gray-50 rounded p-2">
         {trend.points.map((point, idx) => {
@@ -38,9 +58,9 @@ function TrendChart({ trend }: TrendChartProps) {
               className="flex-1 flex flex-col items-center gap-1"
             >
               <div
-                className="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-colors cursor-pointer"
+                className={`w-full ${getFlagColor(point.flag)} rounded-t hover:opacity-80 transition-colors cursor-pointer`}
                 style={{ height: `${Math.max(height, 10)}%` }}
-                title={`${point.value} ${trend.canonical_unit}\n${formatDate(point.collected_at)}`}
+                title={`${point.value} ${trend.canonical_unit}${point.flag ? ` (${point.flag === 'H' ? 'HIGH' : 'LOW'})` : ''}\n${formatDate(point.collected_at)}`}
               />
               {idx === 0 || idx === trend.points.length - 1 ? (
                 <span className="text-xs text-gray-500 truncate w-full text-center">
@@ -69,11 +89,12 @@ function TrendChart({ trend }: TrendChartProps) {
             {trend.points.map((point) => (
               <tr key={point.event_id} className="hover:bg-gray-50">
                 <td className="px-3 py-2">{formatDate(point.collected_at)}</td>
-                <td className="px-3 py-2 text-right font-mono">
+                <td className={`px-3 py-2 text-right font-mono ${point.flag === 'H' ? 'text-red-600' : point.flag === 'L' ? 'text-orange-600' : ''}`}>
                   {point.value} {point.unit}
+                  {getFlagBadge(point.flag)}
                 </td>
                 <td className="px-3 py-2 text-right text-gray-500">
-                  Page {point.page}
+                  {point.page ? `Page ${point.page}` : '-'}
                 </td>
               </tr>
             ))}
@@ -82,7 +103,7 @@ function TrendChart({ trend }: TrendChartProps) {
       </div>
 
       {/* Stats */}
-      <div className="flex gap-4 text-sm">
+      <div className="flex flex-wrap gap-4 text-sm">
         <div className="bg-gray-100 rounded px-3 py-2">
           <span className="text-gray-500">Latest: </span>
           <span className="font-medium">
@@ -100,6 +121,12 @@ function TrendChart({ trend }: TrendChartProps) {
           <span className="text-gray-500">Points: </span>
           <span className="font-medium">{trend.points.length}</span>
         </div>
+        {trend.category && (
+          <div className="bg-gray-100 rounded px-3 py-2">
+            <span className="text-gray-500">Category: </span>
+            <span className="font-medium">{trend.category}</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -154,10 +181,17 @@ export function TrendsPage() {
     error,
     refetch,
   } = useApi(listAvailableTrends);
+  const { data: categories } = useApi(listTrendCategories);
   const [selectedBiomarker, setSelectedBiomarker] = useState<{
     id: string;
     name: string;
   } | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Filter trends by category
+  const filteredTrends = availableTrends?.filter(
+    (item) => !selectedCategory || item.category === selectedCategory
+  );
 
   if (loading) {
     return (
@@ -182,16 +216,30 @@ export function TrendsPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Trends</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Trends</h2>
+        {categories && categories.length > 0 && (
+          <select
+            value={selectedCategory || ""}
+            onChange={(e) => setSelectedCategory(e.target.value || null)}
+            className="border rounded-md px-3 py-2 text-sm"
+          >
+            <option value="">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        )}
+      </div>
 
-      {availableTrends && availableTrends.length > 0 ? (
+      {filteredTrends && filteredTrends.length > 0 ? (
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Biomarker List */}
           <div className="space-y-2">
             <h3 className="font-medium text-gray-700 mb-3">
-              Available Biomarkers
+              Available Biomarkers ({filteredTrends.length})
             </h3>
-            {availableTrends.map((item) => (
+            {filteredTrends.map((item) => (
               <button
                 key={item.biomarker_id}
                 type="button"
@@ -207,16 +255,27 @@ export function TrendsPage() {
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
               >
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-start">
                   <div>
                     <p className="font-medium text-gray-900">
                       {item.biomarker_name}
                     </p>
-                    <p className="text-xs text-gray-500">{item.biomarker_id}</p>
+                    {item.category && (
+                      <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
+                        {item.category}
+                      </span>
+                    )}
                   </div>
-                  <span className="text-sm text-gray-400">
-                    {item.event_count} pts
-                  </span>
+                  <div className="text-right">
+                    {item.latest_value !== null && (
+                      <p className="text-sm font-mono text-gray-700">
+                        {item.latest_value} {item.canonical_unit}
+                      </p>
+                    )}
+                    <span className="text-xs text-gray-400">
+                      {item.event_count} {item.event_count === 1 ? "point" : "points"}
+                    </span>
+                  </div>
                 </div>
               </button>
             ))}

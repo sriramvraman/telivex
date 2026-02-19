@@ -333,7 +333,7 @@ function DocumentDetail({ document, onClose, onDelete }: DocumentDetailProps) {
         ) : events && events.length > 0 ? (
           <div className="max-h-80 overflow-y-auto">
             {Array.from(groupedEvents.entries()).map(
-              ([category, categoryEvents], idx) => (
+              ([category, categoryEvents]: [string, LabEvent[]], idx) => (
                 <CollapsiblePanel
                   key={category}
                   title={category}

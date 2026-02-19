@@ -69,18 +69,46 @@ export interface BiomarkerListResponse {
 }
 
 // Trend types (for chart visualization)
-export interface TrendDataPoint {
+export interface TrendPoint {
   event_id: string;
   collected_at: string;
   value: number;
   unit: string;
+  value_original: number;
+  unit_original: string;
+  document_id: string | null;
+  page: number | null;
+  lab_name: string | null;
+  confidence: number;
+  flag: "H" | "L" | null;  // H=High, L=Low, null=Normal
 }
 
+export interface TrendResponse {
+  biomarker_id: string;
+  analyte_name: string;
+  canonical_unit: string;
+  category: string | null;
+  reference_range: string | null;
+  total_points: number;
+  points: TrendPoint[];
+}
+
+export interface AvailableTrend {
+  biomarker_id: string;
+  biomarker_name: string;
+  canonical_unit: string;
+  category: string | null;
+  event_count: number;
+  latest_value: number | null;
+  latest_date: string | null;
+}
+
+// Legacy alias for backwards compatibility
 export interface BiomarkerTrend {
   biomarker_id: string;
   analyte_name: string;
   unit: string;
-  data_points: TrendDataPoint[];
+  data_points: TrendPoint[];
 }
 
 // API Error type

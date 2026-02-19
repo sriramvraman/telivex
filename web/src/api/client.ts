@@ -4,6 +4,7 @@
  */
 
 import type {
+  AvailableTrend,
   Biomarker,
   Document,
   LabEvent,
@@ -153,13 +154,34 @@ export async function getTrends(biomarkerIds: string[]): Promise<Trend[]> {
 }
 
 /** List available trends (biomarkers with data) */
-export async function listAvailableTrends(): Promise<
-  Array<{ biomarker_id: string; biomarker_name: string; event_count: number }>
-> {
+export async function listAvailableTrends(): Promise<AvailableTrend[]> {
   const response = await fetch(`${API_BASE}/trends`);
-  return handleResponse<
-    Array<{ biomarker_id: string; biomarker_name: string; event_count: number }>
-  >(response);
+  return handleResponse<AvailableTrend[]>(response);
+}
+
+/** List categories with trend data */
+export async function listTrendCategories(): Promise<string[]> {
+  const response = await fetch(`${API_BASE}/trends/categories/list`);
+  return handleResponse<string[]>(response);
+}
+
+/** Get trend summary for a biomarker */
+export async function getTrendSummary(biomarkerId: string): Promise<{
+  biomarker_id: string;
+  analyte_name: string;
+  canonical_unit: string;
+  category: string | null;
+  reference_range: string | null;
+  event_count: number;
+  min_value: number | null;
+  max_value: number | null;
+  avg_value: number | null;
+  first_date: string | null;
+  last_date: string | null;
+  latest_value: number | null;
+}> {
+  const response = await fetch(`${API_BASE}/trends/${biomarkerId}/summary`);
+  return handleResponse(response);
 }
 
 export { ApiError };

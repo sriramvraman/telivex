@@ -63,16 +63,35 @@ export interface TrendPoint {
   collected_at: string;
   value: number;
   unit: string;
-  document_id: string;
-  page: number;
+  value_original: number;
+  unit_original: string;
+  document_id: string | null;
+  page: number | null;
+  lab_name: string | null;
+  confidence: number;
+  flag: "H" | "L" | null;  // H=High, L=Low, null=Normal
 }
 
 /** Trend response for a biomarker */
 export interface Trend {
   biomarker_id: string;
+  analyte_name: string;
+  canonical_unit: string;
+  category: string | null;
+  reference_range: string | null;
+  total_points: number;
+  points: TrendPoint[];
+}
+
+/** Available trend (biomarker with data) */
+export interface AvailableTrend {
+  biomarker_id: string;
   biomarker_name: string;
   canonical_unit: string;
-  points: TrendPoint[];
+  category: string | null;
+  event_count: number;
+  latest_value: number | null;
+  latest_date: string | null;
 }
 
 /** Upload response from document upload */
