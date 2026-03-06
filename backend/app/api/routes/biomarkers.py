@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import cast, func, String
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.db.models import BiomarkerRegistry
 from app.schemas.biomarker import BiomarkerResponse, BiomarkerListResponse
-from app.services.canonicalizer import get_category_for_panel, _load_panel_category_map
+from app.services.canonicalizer import _load_panel_category_map
 
 router = APIRouter(prefix="/biomarkers", tags=["biomarkers"])
 
@@ -42,6 +43,31 @@ def list_categories():
     mapping = _load_panel_category_map()
     categories = sorted(set(mapping.values()))
     return {"categories": categories}
+
+
+@router.get("/search", response_model=list[BiomarkerResponse])
+def search_biomarkers(
+    q: str = Query(..., min_length=1, description="Search query"),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    """Search biomarkers by name, alias, LOINC component, or panel seed."""
+    pattern = f"%{q}%"
+    # Cast the ARRAY column to text for ilike matching across all aliases
+    aliases_text = cast(BiomarkerRegistry.aliases, String)
+    results = (
+        db.query(BiomarkerRegistry)
+        .filter(
+            BiomarkerRegistry.analyte_name.ilike(pattern)
+            | BiomarkerRegistry.biomarker_id.ilike(pattern)
+            | aliases_text.ilike(pattern)
+            | BiomarkerRegistry.panel_seed.ilike(pattern)
+            | func.coalesce(BiomarkerRegistry.loinc_component, "").ilike(pattern)
+        )
+        .limit(limit)
+        .all()
+    )
+    return results
 
 
 @router.get("/{biomarker_id}", response_model=BiomarkerResponse)

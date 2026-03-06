@@ -5,6 +5,7 @@ Run: python -m data.seed_registry
 
 import csv
 import ast
+import json
 from pathlib import Path
 
 from sqlalchemy.orm import Session
@@ -14,13 +15,16 @@ from app.db.models import BiomarkerRegistry
 
 
 def parse_aliases(aliases_str: str) -> list[str]:
-    """Parse aliases from CSV string format."""
+    """Parse aliases from CSV string format (supports both Python list and JSON)."""
     if not aliases_str or aliases_str == "[]":
         return []
     try:
-        return ast.literal_eval(aliases_str)
-    except (ValueError, SyntaxError):
-        return [aliases_str]
+        return json.loads(aliases_str)
+    except (ValueError, json.JSONDecodeError):
+        try:
+            return ast.literal_eval(aliases_str)
+        except (ValueError, SyntaxError):
+            return [aliases_str]
 
 
 def seed_registry(db: Session, csv_path: Path) -> int:
@@ -39,6 +43,8 @@ def seed_registry(db: Session, csv_path: Path) -> int:
                 panel_seed=row.get("panel_seed") or None,
                 is_derived=row.get("is_derived", "").lower() == "true",
                 aliases=parse_aliases(row.get("aliases", "[]")),
+                loinc_code=row.get("loinc_code") or None,
+                loinc_component=row.get("loinc_component") or None,
                 default_reference_range_notes=row.get("default_reference_range_notes")
                 or None,
             )
@@ -62,15 +68,19 @@ def seed_registry(db: Session, csv_path: Path) -> int:
 
 
 def main():
-    csv_path = Path(__file__).parent / "BiomarkerRegistry_v1.csv"
+    # Use LOINC-native v2 registry if available, fall back to v1
+    data_dir = Path(__file__).parent
+    csv_path = data_dir / "BiomarkerRegistry_v2_loinc.csv"
     if not csv_path.exists():
-        print(f"ERROR: CSV not found at {csv_path}")
+        csv_path = data_dir / "BiomarkerRegistry_v1.csv"
+    if not csv_path.exists():
+        print(f"ERROR: No registry CSV found in {data_dir}")
         return
 
     db = SessionLocal()
     try:
         count = seed_registry(db, csv_path)
-        print(f"✓ Seeded {count} biomarkers from {csv_path.name}")
+        print(f"Seeded {count} biomarkers from {csv_path.name}")
     finally:
         db.close()
 

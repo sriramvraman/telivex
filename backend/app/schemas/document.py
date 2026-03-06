@@ -21,6 +21,8 @@ class DocumentResponse(BaseModel):
     document_id: str
     filename: str
     uploaded_at: datetime
+    collected_at: Optional[datetime] = None
+    reported_at: Optional[datetime] = None
     page_count: Optional[int]
     event_count: int = 0
     unmapped_count: int = 0

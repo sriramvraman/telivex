@@ -17,8 +17,11 @@ from app.db.models import BiomarkerRegistry
 
 
 # Load panel → category mapping (deterministic, no ML)
-_PANEL_CATEGORY_MAP_PATH = Path(__file__).parent.parent.parent / "data" / "panel_category_map.json"
+_PANEL_CATEGORY_MAP_PATH = (
+    Path(__file__).parent.parent.parent / "data" / "panel_category_map.json"
+)
 _PANEL_CATEGORY_MAP: dict[str, str] = {}
+
 
 def _load_panel_category_map() -> dict[str, str]:
     """Load the panel_seed → category mapping from JSON file."""
@@ -34,11 +37,12 @@ def _load_panel_category_map() -> dict[str, str]:
 
 
 def get_category_for_panel(panel_seed: Optional[str]) -> Optional[str]:
-    """Get category for a panel_seed using deterministic mapping."""
-    if not panel_seed:
-        return None
-    mapping = _load_panel_category_map()
-    return mapping.get(panel_seed)
+    """Get category for a panel_seed.
+
+    Uses the panel_seed directly as the display category since it provides
+    meaningful grouping (e.g., "Complete Blood Count", "Lipid Profile").
+    """
+    return panel_seed or None
 
 
 @dataclass
@@ -141,137 +145,187 @@ class Canonicalizer:
         "rft": "kidney function test",
     }
 
-    # Label synonyms - map common lab report labels to registry names
-    # These are checked BEFORE alias lookup
-    LABEL_SYNONYMS = {
-        # Glucose
-        "glucose fasting": "fbs",
-        "fasting glucose": "fbs",
-        "fasting blood sugar": "fbs",
-        "fasting plasma glucose": "fbs",
-        "blood sugar fasting": "fbs",
-        # HbA1c
-        "glycosylated hemoglobin": "hba1c",
-        "glycosylated haemoglobin": "hba1c",
-        "glycated hemoglobin": "hba1c",
-        "hba1c": "hba1c",
-        "hemoglobin a1c": "hba1c",
-        # Liver - Bilirubin
-        "bilirubin total": "serum bilirubin total",
-        "total bilirubin": "serum bilirubin total",
-        "bilirubin direct": "serum bilirubin direct",
-        "direct bilirubin": "serum bilirubin direct",
-        "bilirubin indirect": "serum bilirubin indirect",
-        "indirect bilirubin": "serum bilirubin indirect",
-        # Liver - Enzymes
-        "sgot": "aspartate aminotransferase",
-        "sgot/ast": "aspartate aminotransferase",
-        "ast": "aspartate aminotransferase",
-        "sgpt": "alanine aminotransferase",
-        "sgpt/alt": "alanine aminotransferase",
-        "alt": "alanine aminotransferase",
-        "alp": "alkaline phosphatase",
-        "ggt": "gamma glutamyl transferase",
-        # Liver - Proteins
-        "total protein": "serum total protein",
-        "albumin": "serum albumin",
-        "globulin": "serum globulin calculated",
-        "a/g ratio": "albumin globulin ratio",
-        "albumin/globulin ratio": "albumin globulin ratio",
-        "albumin :globulin ratio": "albumin globulin ratio",
-        "a:g ratio": "albumin globulin ratio",
+    # Direct label → LOINC code mapping for common lab report labels
+    # Used as fallback when alias map lookup fails
+    LABEL_TO_LOINC: dict[str, str] = {
+        # CBC
+        "hemoglobin": "718-7",
+        "haemoglobin": "718-7",
+        "hb": "718-7",
+        "hgb": "718-7",
+        "rbc count": "789-8",
+        "rbc": "789-8",
+        "red blood cell count": "789-8",
+        "wbc count": "6690-2",
+        "wbc": "6690-2",
+        "tlc": "6690-2",
+        "total wbc count": "6690-2",
+        "total leucocyte count": "6690-2",
+        "total leukocyte count": "6690-2",
+        "white blood cell count": "6690-2",
+        "platelet count": "777-3",
+        "platelets": "777-3",
+        "pcv": "4544-3",
+        "packed cell volume": "4544-3",
+        "hematocrit": "4544-3",
+        "hct": "4544-3",
+        "mcv": "787-2",
+        "mean corpuscular volume": "787-2",
+        "mch": "785-6",
+        "mean corpuscular hemoglobin": "785-6",
+        "mchc": "786-4",
+        "mean corpuscular hemoglobin concentration": "786-4",
+        "rdw": "788-0",
+        "rdw cv": "788-0",
+        "red cell distribution width": "788-0",
+        "mpv": "32623-1",
+        "mean platelet volume": "32623-1",
+        "esr": "4537-7",
+        "esr erythrocyte sedimentation rate": "4537-7",
+        "erythrocyte sedimentation rate": "4537-7",
+        # Differential %
+        "neutrophils": "770-8",
+        "lymphocytes": "736-9",
+        "monocytes": "5905-5",
+        "eosinophils": "713-8",
+        "basophils": "706-2",
+        # HbA1c & Diabetes
+        "hba1c": "17856-6",
+        "hemoglobin a1c": "17856-6",
+        "glycosylated hemoglobin": "17856-6",
+        "glycosylated haemoglobin": "17856-6",
+        "glycated hemoglobin": "17856-6",
+        "a1c": "17856-6",
+        "glucose fasting": "1558-6",
+        "fasting glucose": "1558-6",
+        "fasting blood sugar": "1558-6",
+        "fasting plasma glucose": "1558-6",
+        "fbs": "1558-6",
+        "blood sugar fasting": "1558-6",
+        "glucose": "2345-7",
+        "blood sugar": "2345-7",
+        "blood glucose": "2345-7",
         # Lipids
-        "total cholesterol": "total cholestrol",  # match registry typo
-        "cholesterol total": "total cholestrol",
-        "cholesterol": "total cholestrol",
-        "triglycerides": "serum triglycerides",
-        "hdl cholesterol": "serum hdl cholestrol",
-        "hdl": "serum hdl cholestrol",
-        "ldl cholesterol": "serum ldl cholestrol",
-        "ldl": "serum ldl cholestrol",
-        "vldl cholesterol": "serum vldl cholestrol",
-        "vldl": "serum vldl cholestrol",
-        "non hdl cholesterol": "non-hdl cholestrol",
+        "total cholesterol": "2093-3",
+        "cholesterol total": "2093-3",
+        "cholesterol": "2093-3",
+        "hdl cholesterol": "2085-9",
+        "hdl": "2085-9",
+        "hdl c": "2085-9",
+        "ldl cholesterol": "13457-7",
+        "ldl": "13457-7",
+        "ldl c": "13457-7",
+        "ldl calculated": "13457-7",
+        "triglycerides": "2571-8",
+        "triglyceride": "2571-8",
+        "vldl cholesterol": "13458-5",
+        "vldl": "13458-5",
+        "v l d l cholesterol": "13458-5",
+        "non hdl cholesterol": "43396-1",
+        "chol/hdl ratio": "9830-1",
+        "total cholesterol/hdl ratio": "9830-1",
+        "tc/hdl ratio": "9830-1",
+        "cholesterol ratio": "9830-1",
         # Kidney
-        "uric acid": "serum uric acid",
-        "creatinine": "creatinine",
-        "urea": "blood urea",
-        "bun": "blood urea nitrogen",
-        "calcium": "serum calcium",
-        "phosphorus": "serum phosphorus",
-        "sodium": "serum sodium",
-        "potassium": "serum potassium",
-        "chloride": "serum chloride",
+        "creatinine": "2160-0",
+        "serum creatinine": "2160-0",
+        "creatinine urine": "2161-8",
+        "urine creatinine": "2161-8",
+        "urea": "6299-2",
+        "blood urea": "6299-2",
+        "bun": "3094-0",
+        "blood urea nitrogen": "3094-0",
+        "blood urea nitrogen bun": "3094-0",
+        "uric acid": "3084-1",
+        "serum uric acid": "3084-1",
+        "egfr": "33914-3",
+        "egfr ckd epi": "33914-3",
+        "estimated gfr": "33914-3",
+        # Liver
+        "sgot": "1920-8",
+        "sgot/ast": "1920-8",
+        "ast": "1920-8",
+        "aspartate aminotransferase": "1920-8",
+        "sgpt": "1742-6",
+        "sgpt/alt": "1742-6",
+        "alt": "1742-6",
+        "alanine aminotransferase": "1742-6",
+        "alp": "6768-6",
+        "alkaline phosphatase": "6768-6",
+        "total bilirubin": "1975-2",
+        "bilirubin total": "1975-2",
+        "direct bilirubin": "1968-7",
+        "bilirubin direct": "1968-7",
+        "indirect bilirubin": "1971-1",
+        "bilirubin indirect": "1971-1",
+        "total protein": "2885-2",
+        "serum total protein": "2885-2",
+        "albumin": "1751-7",
+        "serum albumin": "1751-7",
+        "globulin": "10834-0",
+        "serum globulin": "10834-0",
+        "ggt": "2324-2",
+        "gamma glutamyl transferase": "2324-2",
         # Thyroid
-        "tsh": "thyroid stimulating hormone",
-        "t3": "free t3",
-        "t4": "free t4",
-        "free t3": "free t3",
-        "free t4": "free t4",
-        # Vitamins
-        "vitamin d": "vitamin d 25-hydroxy",
-        "25 hydroxy vitamin d": "vitamin d 25-hydroxy",
-        "vitamin b12": "vitamin b12",
+        "tsh": "3016-3",
+        "thyroid stimulating hormone": "3016-3",
+        "tsh ultrasensitive": "3016-3",
+        "thyroid stimulating hormone ultrasensitive": "3016-3",
+        "free t4": "3024-7",
+        "ft4": "3024-7",
+        "free t3": "3051-0",
+        "ft3": "3051-0",
+        "t4": "3026-2",
+        "total thyroxine": "3026-2",
+        "thyroxine": "3026-2",
+        "t3": "3053-6",
+        "total triiodothyronine": "3053-6",
+        "triiodothyronine": "3053-6",
+        # Electrolytes
+        "sodium": "2951-2",
+        "serum sodium": "2951-2",
+        "potassium": "2823-3",
+        "serum potassium": "2823-3",
+        "chloride": "2075-0",
+        "serum chloride": "2075-0",
+        "calcium": "17861-6",
+        "calcium serum": "17861-6",
+        "serum calcium": "17861-6",
+        "phosphorus": "2777-1",
+        "serum phosphorus": "2777-1",
+        "magnesium": "19123-9",
+        "magnesium serum": "19123-9",
         # Iron
-        "ferritin": "serum ferritin",
-        "iron": "serum ferritin",
-        # CBC - already have good aliases but add more
-        "wbc count": "tlc",
-        "total wbc count": "tlc",
-        "white blood cell count": "tlc",
-        "platelet count": "platelet count",
-        "platelets": "platelet count",
-        # More Lipid variations
-        "vldl cholesterol": "serum vldl cholestrol",
-        "vldl": "serum vldl cholestrol",
-        "v l d l cholesterol": "serum vldl cholestrol",
-        "chol/hdl ratio": "total cholestrol to hdl ratio",
-        "total cholesterol/hdl ratio": "total cholestrol to hdl ratio",
-        "ldl/hdl ratio": "ldl to hdl ratio",
-        "hdl/ldl ratio": "ldl to hdl ratio",
-        "hdl/ ldl ratio": "ldl to hdl ratio",
-        # More Liver variations
-        "bilirubin total": "serum bilirubin total",
-        "bilirubin direct": "serum bilirubin direct", 
-        "bilirubin indirect": "serum bilirubin indirect",
-        "albumin/globulin ratio": "albumin/globulin ratio",
-        "albumin:globulin ratio": "albumin/globulin ratio",
-        "a/g ratio": "albumin/globulin ratio",
-        "a:g ratio": "albumin/globulin ratio",
-        "ag ratio": "albumin/globulin ratio",
-        # Calcium variants
-        "calcium serum": "serum calcium",
-        "calcium": "serum calcium",
-        # Vitamin variants  
-        "vitamin - b12": "vitamin b12",
-        "vitamin b-12": "vitamin b12",
-        "cyanocobalamin": "vitamin b12",
-        "vitamin d 25 hydroxy": "vitamin d 25-hydroxy",
-        "vitamin d total 25 hydroxy": "vitamin d 25-hydroxy",
-        "25 oh vitamin d": "vitamin d 25-hydroxy",
-        "25 hydroxy vitamin d": "vitamin d 25-hydroxy",
-        "folate": "folic acid",
-        "folic acid": "folic acid",
-        "folate folic acid": "folic acid",
-        # Thyroid variants
-        "thyroid stimulating hormone": "thyroid stimulating hormone tsh ultrasensitive",
-        "thyroid stimulating hormone ultrasensitive": "thyroid stimulating hormone tsh ultrasensitive",
-        "tsh ultrasensitive": "thyroid stimulating hormone tsh ultrasensitive",
-        "tsh": "thyroid stimulating hormone tsh ultrasensitive",
-        "triiodothyronine": "free t3",
-        "triiodothyronine t3": "free t3",
-        "t3": "free t3",
-        "total thyroxine": "free t4",
-        "total thyroxine t4": "free t4",
-        "thyroxine": "free t4",
-        "t4": "free t4",
-        # Others
-        "uric acid": "serum uric acid",
-        "homocysteine": "homocysteine",
-        "magnesium serum": "magnesium",
-        "magnesium,serum": "magnesium",
-        "insulin fasting": "insulin fasting",
-        "fasting insulin": "insulin fasting",
+        "iron": "2498-4",
+        "serum iron": "2498-4",
+        "ferritin": "2276-4",
+        "serum ferritin": "2276-4",
+        "tibc": "2500-7",
+        # Vitamins
+        "vitamin b12": "2132-9",
+        "vitamin b 12": "2132-9",
+        "cyanocobalamin": "2132-9",
+        "b12": "2132-9",
+        "folic acid": "2284-8",
+        "folate": "2284-8",
+        "vitamin d": "1989-3",
+        "vitamin d 25 hydroxy": "1989-3",
+        "25 oh vitamin d": "1989-3",
+        "25 hydroxy vitamin d": "1989-3",
+        "vitamin d 25 oh vitamin d": "1989-3",
+        # Inflammation
+        "crp": "1988-5",
+        "c reactive protein": "1988-5",
+        "hs crp": "30522-7",
+        # Hormones
+        "insulin": "20448-7",
+        "insulin fasting": "20448-7",
+        "fasting insulin": "20448-7",
+        "cortisol": "2143-6",
+        "homocysteine": "13965-9",
+        # Pancreatic
+        "amylase": "1798-8",
+        "lipase": "3040-3",
     }
 
     # Common abbreviation expansions
@@ -314,6 +368,7 @@ class Canonicalizer:
     def __init__(self, db: Session):
         self.db = db
         self._alias_map: dict[str, BiomarkerRegistry] = {}
+        self._id_map: dict[str, BiomarkerRegistry] = {}
         self._load_registry()
 
     def _load_registry(self) -> None:
@@ -322,6 +377,9 @@ class Canonicalizer:
         biomarkers = self.db.scalars(stmt).all()
 
         for biomarker in biomarkers:
+            # Index by biomarker_id (LOINC code) for direct lookup
+            self._id_map[biomarker.biomarker_id] = biomarker
+
             # Add canonical name
             normalized = self._normalize(biomarker.analyte_name)
             self._alias_map[normalized] = biomarker
@@ -331,13 +389,27 @@ class Canonicalizer:
                 for alias in biomarker.aliases:
                     normalized_alias = self._normalize(alias)
                     if normalized_alias:
-                        self._alias_map[normalized_alias] = biomarker
+                        # Don't overwrite existing entries (first-come wins)
+                        if normalized_alias not in self._alias_map:
+                            self._alias_map[normalized_alias] = biomarker
 
     # Parenthetical terms to preserve (important for disambiguation)
     PRESERVE_PARENS = {
-        "total", "direct", "indirect", "fasting", "random", "ultrasensitive",
-        "calculated", "serum", "plasma", "urine", "whole blood",
-        "differential", "absolute", "cv", "sd",
+        "total",
+        "direct",
+        "indirect",
+        "fasting",
+        "random",
+        "ultrasensitive",
+        "calculated",
+        "serum",
+        "plasma",
+        "urine",
+        "whole blood",
+        "differential",
+        "absolute",
+        "cv",
+        "sd",
     }
 
     def _normalize(self, text: str) -> str:
@@ -355,7 +427,7 @@ class Canonicalizer:
         result = re.sub(r"\s*,\s*", " ", result)  # Commas to spaces
         # Remove extra whitespace
         result = re.sub(r"\s+", " ", result)
-        
+
         # Handle parentheses: keep important terms, remove the rest
         def replace_parens(match):
             content = match.group(1).lower().strip()
@@ -364,18 +436,20 @@ class Canonicalizer:
                 if term in content:
                     return " " + content + " "
             return " "
-        
+
         result = re.sub(r"\s*\(([^)]*)\)\s*", replace_parens, result)
-        
+
         # Remove extra whitespace again
         result = re.sub(r"\s+", " ", result)
         # Remove trailing asterisks and flags
         result = re.sub(r"\s*\*+\s*$", "", result)
+
         # Clean dots from abbreviations (V.L.D.L → vldl)
         # Handle patterns like "v.l.d.l cholesterol" → "vldl cholesterol"
         def clean_dotted_abbrev(match):
             abbrev = match.group(0).replace(".", "")
             return abbrev
+
         result = re.sub(r"\b([a-z]\.)+[a-z]\b", clean_dotted_abbrev, result)
         return result.strip()
 
@@ -409,11 +483,11 @@ class Canonicalizer:
     DIFFERENTIAL_INDICATORS = [
         "differential",
         "differential leucocyte",
-        "differential leukocyte", 
+        "differential leukocyte",
         "dlc",
         "percentage",
     ]
-    
+
     # Section keywords that indicate absolute counts
     ABSOLUTE_INDICATORS = [
         "absolute",
@@ -427,88 +501,96 @@ class Canonicalizer:
         """Normalize section name using panel synonyms."""
         if not section:
             return None
-        
+
         section_lower = section.lower().strip()
-        
+
         # Apply spelling variants first
         for british, american in self.SPELLING_VARIANTS.items():
             section_lower = section_lower.replace(british, american)
-        
+
         # Check for panel synonyms
         for synonym, canonical in self.PANEL_SYNONYMS.items():
             if synonym in section_lower:
                 return canonical
-        
+
         return section_lower
 
     def _get_section_qualifier(self, section: Optional[str]) -> Optional[str]:
         """
         Determine if section indicates differential or absolute count.
-        
+
         Returns 'differential', 'absolute', or None.
         """
         if not section:
             return None
-        
+
         section_lower = section.lower()
-        
+
         # Normalize British spellings
         for british, american in self.SPELLING_VARIANTS.items():
             section_lower = section_lower.replace(british, american)
-        
+
         for indicator in self.DIFFERENTIAL_INDICATORS:
             if indicator in section_lower:
                 return "differential"
-        
+
         for indicator in self.ABSOLUTE_INDICATORS:
             if indicator in section_lower:
                 return "absolute"
-        
+
         return None
 
-    def _build_section_aware_labels(self, label: str, section: Optional[str]) -> list[tuple[str, float]]:
+    def _build_section_aware_labels(
+        self, label: str, section: Optional[str]
+    ) -> list[tuple[str, float]]:
         """
         Build labels that incorporate section context.
-        
+
         For a label like "Neutrophils" in section "Differential Leucocyte Count":
         - "neutrophils differential"
         - "neutrophils differential pct"
         - "differential neutrophils"
-        
+
         Returns list of (label, confidence) tuples.
         """
         results = []
         qualifier = self._get_section_qualifier(section)
-        
+
         if not qualifier:
             return results
-        
+
         normalized = self._normalize(label)
-        
+
         # Common patterns for differential vs absolute
         if qualifier == "differential":
-            results.extend([
-                (f"{normalized} differential", 0.98),
-                (f"{normalized} differential pct", 0.97),
-                (f"{normalized} percent", 0.96),
-                (f"differential {normalized}", 0.95),
-                (f"{normalized} pct", 0.94),
-            ])
+            results.extend(
+                [
+                    (f"{normalized} differential", 0.98),
+                    (f"{normalized} differential pct", 0.97),
+                    (f"{normalized} percent", 0.96),
+                    (f"differential {normalized}", 0.95),
+                    (f"{normalized} pct", 0.94),
+                ]
+            )
         elif qualifier == "absolute":
-            results.extend([
-                (f"{normalized} absolute", 0.98),
-                (f"{normalized} absolute count", 0.97),
-                (f"absolute {normalized}", 0.96),
-                (f"absolute {normalized} count", 0.95),
-                (f"{normalized} count", 0.94),
-            ])
-        
+            results.extend(
+                [
+                    (f"{normalized} absolute", 0.98),
+                    (f"{normalized} absolute count", 0.97),
+                    (f"absolute {normalized}", 0.96),
+                    (f"absolute {normalized} count", 0.95),
+                    (f"{normalized} count", 0.94),
+                ]
+            )
+
         return results
 
-    def canonicalize(self, raw_label: str, section: Optional[str] = None) -> CanonicalResult:
+    def canonicalize(
+        self, raw_label: str, section: Optional[str] = None
+    ) -> CanonicalResult:
         """
         Attempt to match a raw label to the biomarker registry.
-        
+
         Args:
             raw_label: The test name from the lab report
             section: Optional section context (e.g., "Differential Leucocyte Count")
@@ -517,24 +599,98 @@ class Canonicalizer:
             CanonicalResult with match info or unmatched status
         """
         if not raw_label or not raw_label.strip():
-            return CanonicalResult(matched=False, match=None, raw_label=raw_label, section=section)
+            return CanonicalResult(
+                matched=False, match=None, raw_label=raw_label, section=section
+            )
 
         # Try progressively more aggressive normalization
         attempts = []
 
         # 0. Section-aware labels first (highest priority for disambiguation)
+        # Check these BEFORE LABEL_TO_LOINC to avoid short-circuiting
+        # e.g., "Neutrophils" in "Absolute" section should match 751-8, not 770-8
         section_labels = self._build_section_aware_labels(raw_label, section)
-        attempts.extend(section_labels)
+        for attempt, confidence in section_labels:
+            if attempt in self._alias_map:
+                biomarker = self._alias_map[attempt]
+                category = get_category_for_panel(biomarker.panel_seed)
+                return CanonicalResult(
+                    matched=True,
+                    match=CanonicalMatch(
+                        biomarker_id=biomarker.biomarker_id,
+                        analyte_name=biomarker.analyte_name,
+                        canonical_unit=biomarker.canonical_unit,
+                        confidence=confidence,
+                        category=category,
+                        panel_seed=biomarker.panel_seed,
+                    ),
+                    raw_label=raw_label,
+                    section=section,
+                )
 
         # 1. Basic normalization
         normalized = self._normalize(raw_label)
         attempts.append((normalized, 1.0))
 
-        # 1.5. Check LABEL_SYNONYMS for common lab report variants
-        if normalized in self.LABEL_SYNONYMS:
-            synonym = self.LABEL_SYNONYMS[normalized]
-            attempts.append((synonym, 0.98))
-            attempts.append((self._normalize(synonym), 0.98))
+        # 1.5. Check LABEL_TO_LOINC for direct LOINC code lookup
+        if normalized in self.LABEL_TO_LOINC:
+            loinc_code = self.LABEL_TO_LOINC[normalized]
+            if loinc_code in self._id_map:
+                biomarker = self._id_map[loinc_code]
+                category = get_category_for_panel(biomarker.panel_seed)
+                return CanonicalResult(
+                    matched=True,
+                    match=CanonicalMatch(
+                        biomarker_id=biomarker.biomarker_id,
+                        analyte_name=biomarker.analyte_name,
+                        canonical_unit=biomarker.canonical_unit,
+                        confidence=0.98,
+                        category=category,
+                        panel_seed=biomarker.panel_seed,
+                    ),
+                    raw_label=raw_label,
+                    section=section,
+                )
+
+        # 1.6. Try parenthesized abbreviation (e.g., "Mean Corp Volume (MCV)" → "mcv")
+        paren_match = re.search(r"\(([A-Z]{2,}[A-Z0-9/]*)\)", raw_label)
+        if paren_match:
+            abbrev = paren_match.group(1).lower()
+            if abbrev in self.LABEL_TO_LOINC:
+                loinc_code = self.LABEL_TO_LOINC[abbrev]
+                if loinc_code in self._id_map:
+                    biomarker = self._id_map[loinc_code]
+                    category = get_category_for_panel(biomarker.panel_seed)
+                    return CanonicalResult(
+                        matched=True,
+                        match=CanonicalMatch(
+                            biomarker_id=biomarker.biomarker_id,
+                            analyte_name=biomarker.analyte_name,
+                            canonical_unit=biomarker.canonical_unit,
+                            confidence=0.97,
+                            category=category,
+                            panel_seed=biomarker.panel_seed,
+                        ),
+                        raw_label=raw_label,
+                        section=section,
+                    )
+            # Also try in alias map
+            if abbrev in self._alias_map:
+                biomarker = self._alias_map[abbrev]
+                category = get_category_for_panel(biomarker.panel_seed)
+                return CanonicalResult(
+                    matched=True,
+                    match=CanonicalMatch(
+                        biomarker_id=biomarker.biomarker_id,
+                        analyte_name=biomarker.analyte_name,
+                        canonical_unit=biomarker.canonical_unit,
+                        confidence=0.97,
+                        category=category,
+                        panel_seed=biomarker.panel_seed,
+                    ),
+                    raw_label=raw_label,
+                    section=section,
+                )
 
         # 2. Strip method descriptors
         stripped = self._normalize(self._strip_method_descriptors(raw_label))
@@ -577,7 +733,9 @@ class Canonicalizer:
                 )
 
         # No match found - do NOT guess
-        return CanonicalResult(matched=False, match=None, raw_label=raw_label, section=section)
+        return CanonicalResult(
+            matched=False, match=None, raw_label=raw_label, section=section
+        )
 
     def _generate_variants(self, normalized: str) -> list[str]:
         """Generate variants of the label to try matching."""
@@ -610,4 +768,5 @@ class Canonicalizer:
     def refresh(self) -> None:
         """Reload the registry (call after registry updates)."""
         self._alias_map.clear()
+        self._id_map.clear()
         self._load_registry()
