@@ -1,0 +1,348 @@
+{
+  "systems": [
+    {
+      "system_id": "renal",
+      "name": "Renal",
+      "description": "Kidney function and urinary system markers",
+      "parent_system_id": null,
+      "children": [
+        {
+          "system_id": "renal.glomerular",
+          "name": "Glomerular Filtration",
+          "description": "Markers of glomerular filtration rate and kidney clearance"
+        },
+        {
+          "system_id": "renal.tubular",
+          "name": "Tubular Function",
+          "description": "Markers of renal tubular absorption and secretion"
+        }
+      ]
+    },
+    {
+      "system_id": "hepatic",
+      "name": "Hepatic",
+      "description": "Liver function and hepatobiliary system markers",
+      "parent_system_id": null,
+      "children": [
+        {
+          "system_id": "hepatic.enzymes",
+          "name": "Hepatic Enzymes",
+          "description": "Liver damage and cholestasis enzymes (AST, ALT, ALP, GGT)"
+        },
+        {
+          "system_id": "hepatic.synthetic",
+          "name": "Hepatic Synthetic Function",
+          "description": "Markers of liver synthetic capacity (albumin, bilirubin, PT)"
+        }
+      ]
+    },
+    {
+      "system_id": "hematologic",
+      "name": "Hematologic",
+      "description": "Blood cell counts, morphology, and coagulation",
+      "parent_system_id": null,
+      "children": [
+        {
+          "system_id": "hematologic.erythrocyte",
+          "name": "Erythrocyte (Red Cell)",
+          "description": "Red blood cell count, hemoglobin, hematocrit, and indices"
+        },
+        {
+          "system_id": "hematologic.leukocyte",
+          "name": "Leukocyte (White Cell)",
+          "description": "White blood cell count and differential"
+        },
+        {
+          "system_id": "hematologic.platelet",
+          "name": "Platelet",
+          "description": "Platelet count, volume, and distribution"
+        },
+        {
+          "system_id": "hematologic.coagulation",
+          "name": "Coagulation",
+          "description": "Clotting factors, PT, INR, aPTT, fibrinogen"
+        }
+      ]
+    },
+    {
+      "system_id": "metabolic",
+      "name": "Metabolic / Endocrine",
+      "description": "Glucose metabolism, diabetes markers, and metabolic panels",
+      "parent_system_id": null,
+      "children": [
+        {
+          "system_id": "metabolic.glucose",
+          "name": "Glucose Metabolism",
+          "description": "Blood glucose, HbA1c, insulin, and related markers"
+        },
+        {
+          "system_id": "metabolic.electrolytes",
+          "name": "Electrolytes & Minerals",
+          "description": "Sodium, potassium, calcium, magnesium, phosphorus, chloride"
+        }
+      ]
+    },
+    {
+      "system_id": "cardiovascular",
+      "name": "Cardiovascular",
+      "description": "Lipid profile, cardiac markers, and vascular risk indicators",
+      "parent_system_id": null,
+      "children": [
+        {
+          "system_id": "cardiovascular.lipid",
+          "name": "Lipid Metabolism",
+          "description": "Total cholesterol, HDL, LDL, triglycerides, lipid ratios"
+        },
+        {
+          "system_id": "cardiovascular.cardiac",
+          "name": "Cardiac Markers",
+          "description": "Troponin, BNP, CK-MB, and other myocardial markers"
+        }
+      ]
+    },
+    {
+      "system_id": "thyroid",
+      "name": "Thyroid",
+      "description": "Thyroid gland function markers",
+      "parent_system_id": null
+    },
+    {
+      "system_id": "inflammatory",
+      "name": "Inflammatory / Immune",
+      "description": "Markers of inflammation, infection, and immune response",
+      "parent_system_id": null
+    },
+    {
+      "system_id": "nutritional",
+      "name": "Nutritional",
+      "description": "Vitamins, minerals, and nutritional status markers",
+      "parent_system_id": null
+    },
+    {
+      "system_id": "pancreatic",
+      "name": "Pancreatic",
+      "description": "Exocrine pancreatic function markers",
+      "parent_system_id": null
+    },
+    {
+      "system_id": "urinary",
+      "name": "Urinary",
+      "description": "Urine chemistry and sediment analysis",
+      "parent_system_id": null
+    },
+    {
+      "system_id": "reproductive",
+      "name": "Reproductive / Hormonal",
+      "description": "Sex hormones, fertility, and reproductive markers",
+      "parent_system_id": null
+    },
+    {
+      "system_id": "oncology",
+      "name": "Oncology",
+      "description": "Tumor markers and cancer screening indicators",
+      "parent_system_id": null
+    }
+  ],
+  "biomarker_mappings": {
+    "_comment": "Maps biomarker_id (LOINC code) to organ systems. 'primary' is the main clinical system, 'secondary' are additional relevant systems.",
+
+    "renal.glomerular": {
+      "primary": ["2160-0", "3094-0", "6299-2", "33914-3", "62238-1", "48642-3", "69405-9", "12966-8", "33558-8"],
+      "secondary": []
+    },
+    "renal.tubular": {
+      "primary": ["14682-9", "1963-8", "33558-8"],
+      "secondary": ["2161-8"]
+    },
+
+    "hepatic.enzymes": {
+      "primary": ["1920-8", "1742-6", "1744-2", "6768-6", "1975-2", "1968-7", "1834-1"],
+      "secondary": []
+    },
+    "hepatic.synthetic": {
+      "primary": ["1751-7", "1971-1", "1988-5", "1759-0", "2324-2", "1743-4", "15152-2", "2862-1", "2885-2", "30239-8", "30522-7", "35706-1", "49936-8", "61151-7", "61152-5"],
+      "secondary": []
+    },
+
+    "hematologic.erythrocyte": {
+      "primary": ["718-7", "4544-3", "789-8", "786-4", "785-6", "787-2", "788-0", "783-1", "2714-4", "777-3", "776-5", "30392-5", "4537-7", "30313-1", "30385-9", "30350-3", "31100-1", "30180-4"],
+      "secondary": ["5905-5", "71695-1"]
+    },
+    "hematologic.leukocyte": {
+      "primary": ["6690-2", "770-8", "26444-0", "751-8", "26449-9", "26474-7", "753-4", "26484-6", "742-7", "26478-8", "764-1", "26485-3", "711-2", "26498-6", "731-0", "26508-2", "713-8", "740-1", "712-0", "26446-5", "714-6", "26453-1", "26450-7", "26464-8", "26511-6", "26515-7", "26499-4", "27297-1", "28539-5", "28540-3", "28541-1", "28542-9"],
+      "secondary": ["736-9", "737-7"]
+    },
+    "hematologic.platelet": {
+      "primary": ["777-3", "32623-1", "28542-9", "776-5", "49497-1"],
+      "secondary": ["30180-4"]
+    },
+    "hematologic.coagulation": {
+      "primary": ["5902-2", "6301-6", "3173-2", "3255-7", "46418-0", "48065-7", "34714-6"],
+      "secondary": []
+    },
+
+    "metabolic.glucose": {
+      "primary": ["2345-7", "2339-0", "2341-6", "1558-6", "20448-7", "53553-4", "74774-1", "41651-1", "41652-9", "41653-7", "27353-2", "1521-4", "4548-4", "17856-6", "17855-8"],
+      "secondary": []
+    },
+    "metabolic.electrolytes": {
+      "primary": ["2951-2", "2823-3", "2947-0", "2075-0", "17861-6", "2601-3", "12180-6", "2777-1", "2532-0"],
+      "secondary": ["2692-2", "13536-8", "49765-1"]
+    },
+
+    "cardiovascular.lipid": {
+      "primary": ["2093-3", "2085-9", "13457-7", "2571-8", "9830-1", "43396-1", "11054-4"],
+      "secondary": ["32309-7", "2086-7"]
+    },
+    "cardiovascular.cardiac": {
+      "primary": ["10839-9", "42757-5", "67151-1", "2157-6", "13969-1", "14805-6"],
+      "secondary": ["2532-0"]
+    },
+
+    "thyroid": {
+      "primary": ["3016-3", "3024-7", "3026-2", "3051-0", "3053-6", "11579-0", "11580-8"],
+      "secondary": []
+    },
+
+    "inflammatory": {
+      "primary": ["1988-5", "4537-7", "30341-2", "33762-6", "14957-5"],
+      "secondary": ["6690-2", "770-8", "711-2"]
+    },
+
+    "nutritional": {
+      "primary": ["2132-9", "2284-8", "2498-4", "2500-7", "1989-3", "2502-3"],
+      "secondary": ["718-7", "2714-4"]
+    },
+
+    "pancreatic": {
+      "primary": ["1798-8", "3040-3"],
+      "secondary": ["2345-7"]
+    },
+
+    "urinary": {
+      "primary": ["2161-8", "2965-2", "2888-6", "2890-2", "1754-1", "1978-6", "3107-0", "9318-7", "2695-5", "14957-5", "14959-1", "35674-1", "50562-8"],
+      "secondary": []
+    },
+
+    "reproductive": {
+      "primary": ["2243-4", "83084-4", "2986-8"],
+      "secondary": []
+    },
+
+    "oncology": {
+      "primary": ["2857-1", "2039-6"],
+      "secondary": []
+    }
+  },
+  "panel_fallback": {
+    "_comment": "Maps panel_seed to default organ system for biomarkers not explicitly listed above",
+    "Complete Blood Count": "hematologic",
+    "Electrolytes": "metabolic.electrolytes",
+    "Liver Function Test": "hepatic",
+    "Kidney Function Test": "renal",
+    "Diabetes Panel": "metabolic.glucose",
+    "HbA1c Panel": "metabolic.glucose",
+    "Lipid Profile": "cardiovascular.lipid",
+    "Thyroid Profile": "thyroid",
+    "Coagulation": "hematologic.coagulation",
+    "Urinalysis": "urinary",
+    "Iron Studies": "nutritional",
+    "Hormones": "reproductive",
+    "Cardiac Markers": "cardiovascular.cardiac",
+    "Pancreatic Enzymes": "pancreatic",
+    "Tumor Markers": "oncology",
+    "Vitamins": "nutritional"
+  },
+  "correlations": [
+    {
+      "biomarker_id_a": "2160-0",
+      "biomarker_id_b": "33914-3",
+      "correlation_type": "derived_from",
+      "description": "eGFR is derived from serum creatinine (CKD-EPI formula)"
+    },
+    {
+      "biomarker_id_a": "2160-0",
+      "biomarker_id_b": "3094-0",
+      "correlation_type": "clinical_panel",
+      "description": "Creatinine and BUN both assess kidney function; BUN/Creatinine ratio is diagnostic"
+    },
+    {
+      "biomarker_id_a": "3094-0",
+      "biomarker_id_b": "33914-3",
+      "correlation_type": "clinical_panel",
+      "description": "BUN and eGFR are co-indicators of renal function"
+    },
+    {
+      "biomarker_id_a": "1920-8",
+      "biomarker_id_b": "1742-6",
+      "correlation_type": "clinical_panel",
+      "description": "AST and ALT are paired hepatocellular damage markers; AST/ALT ratio (De Ritis) is diagnostic"
+    },
+    {
+      "biomarker_id_a": "1742-6",
+      "biomarker_id_b": "1744-2",
+      "correlation_type": "clinical_panel",
+      "description": "ALT and ALP distinguish hepatocellular vs cholestatic liver injury"
+    },
+    {
+      "biomarker_id_a": "1920-8",
+      "biomarker_id_b": "1744-2",
+      "correlation_type": "clinical_panel",
+      "description": "AST and ALP together help classify liver injury pattern"
+    },
+    {
+      "biomarker_id_a": "2093-3",
+      "biomarker_id_b": "2085-9",
+      "correlation_type": "clinical_panel",
+      "description": "Total cholesterol and HDL are components of lipid profile; TC/HDL ratio assesses cardiovascular risk"
+    },
+    {
+      "biomarker_id_a": "2093-3",
+      "biomarker_id_b": "13457-7",
+      "correlation_type": "derived_from",
+      "description": "LDL is often calculated from Total Cholesterol, HDL, and Triglycerides (Friedewald equation)"
+    },
+    {
+      "biomarker_id_a": "2085-9",
+      "biomarker_id_b": "2571-8",
+      "correlation_type": "inverse",
+      "description": "HDL and Triglycerides are inversely correlated; high TG with low HDL indicates metabolic syndrome"
+    },
+    {
+      "biomarker_id_a": "2345-7",
+      "biomarker_id_b": "4548-4",
+      "correlation_type": "clinical_panel",
+      "description": "Fasting glucose and HbA1c together assess short-term vs long-term glycemic control"
+    },
+    {
+      "biomarker_id_a": "3016-3",
+      "biomarker_id_b": "3024-7",
+      "correlation_type": "inverse",
+      "description": "TSH and Free T4 are inversely related via hypothalamic-pituitary-thyroid axis feedback"
+    },
+    {
+      "biomarker_id_a": "3024-7",
+      "biomarker_id_b": "3026-2",
+      "correlation_type": "clinical_panel",
+      "description": "Free T4 and Free T3 together assess thyroid hormone production"
+    },
+    {
+      "biomarker_id_a": "718-7",
+      "biomarker_id_b": "4544-3",
+      "correlation_type": "clinical_panel",
+      "description": "Hemoglobin and Hematocrit are co-indicators of oxygen-carrying capacity"
+    },
+    {
+      "biomarker_id_a": "718-7",
+      "biomarker_id_b": "2714-4",
+      "correlation_type": "clinical_panel",
+      "description": "Hemoglobin and MCV together classify anemia type (microcytic, normocytic, macrocytic)"
+    },
+    {
+      "biomarker_id_a": "2498-4",
+      "biomarker_id_b": "718-7",
+      "correlation_type": "clinical_panel",
+      "description": "Iron and Hemoglobin: iron deficiency is the most common cause of anemia"
+    }
+  ]
+}

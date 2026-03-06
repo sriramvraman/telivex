@@ -1,85 +1,27 @@
-# Active Task
+# Active Task: STORY-1 — Graph Data Model
 
-## Current Task
-**Phase 1B: PDF Extraction Pipeline** 🚧 IN PROGRESS
-
-### Description
-Implement the core PDF processing pipeline: upload, extract tables, canonicalize biomarkers, normalize units, and create LabEvents with full provenance.
+## Issue: #2
+## Status: In Progress
 
 ### Acceptance Criteria
-- [x] PDF upload endpoint (`POST /api/v1/documents/upload`)
-- [x] Document stored with metadata (filename, upload_date, page_count, file_hash)
-- [x] pdfplumber table extraction service
-- [x] Canonicalization service (match raw labels → registry biomarker_ids using aliases)
-- [x] Unit normalization service (deterministic conversion tables)
-- [x] LabEvent creation with provenance (document_id, page, row_index)
-- [x] UnmappedRow surfacing (rows that couldn't be matched)
-- [x] GET endpoint to list unmapped rows for review
-- [ ] **PENDING: Integration test with real PDF**
-- [ ] **PENDING: Verify database migrations work**
+- [ ] AC-1: `organ_systems` table (system_id, name, description, parent_system_id)
+- [ ] AC-2: `biomarker_system_map` junction table (biomarker_id, system_id, relationship_type)
+- [ ] AC-3: `biomarker_correlations` table (biomarker_id_a, biomarker_id_b, correlation_type, description)
+- [ ] AC-4: `health_snapshots` table (snapshot_id, user_id, snapshot_date, label)
+- [ ] AC-5: `snapshot_events` junction table (snapshot_id, event_id)
+- [ ] AC-6: Organ system taxonomy seeded (8+ systems)
+- [ ] AC-7: All biomarkers mapped to at least one organ system
+- [ ] AC-8: Key clinical correlations seeded
+- [ ] AC-9: Migration applies cleanly
+- [ ] AC-10: Migration is reversible
+- [ ] AC-11-13: Architecture compliance
+- [ ] AC-14-16: Code quality (ruff)
+- [ ] AC-17-20: Tests pass
+- [ ] AC-21-22: Security (user scoping, no new endpoints)
 
-### Files Created
-- `backend/app/api/routes/documents.py` - Upload and retrieval endpoints
-- `backend/app/services/extractor.py` - PDF table extraction with pdfplumber
-- `backend/app/services/canonicalizer.py` - Biomarker matching against registry
-- `backend/app/services/normalizer.py` - Unit conversion (deterministic)
-- `backend/app/repositories/document_repo.py` - Document CRUD
-- `backend/app/repositories/lab_event_repo.py` - LabEvent & UnmappedRow CRUD
-- `backend/app/schemas/document.py` - Request/response schemas
-
-### Verification Commands (TO RUN)
-```bash
-# 1. Ensure DB is running
-docker compose up -d
-
-# 2. Run migrations
-cd backend && source .venv/bin/activate && alembic upgrade head
-
-# 3. Start API
-uvicorn app.main:app --reload --port 8001
-
-# 4. Test upload (need a sample PDF)
-curl -X POST -F "file=@sample_lab_report.pdf" \
-  "http://localhost:8001/api/v1/documents/upload?collected_date=2026-01-15"
-
-# 5. Check extracted events
-curl http://localhost:8001/api/v1/documents/{id}/events
-
-# 6. Check unmapped rows
-curl http://localhost:8001/api/v1/documents/{id}/unmapped
-```
-
----
-
-## Phase 1C: Trend & Event Endpoints ✅ COMPLETE
-
-### Description
-Add remaining API endpoints for Phase 1 MVP: trend queries and LabEvent CRUD.
-
-### Acceptance Criteria
-- [x] `GET /api/v1/biomarkers/{id}/trend` - Time series with date filtering
-- [x] `GET /api/v1/biomarkers/{id}/summary` - Aggregate stats (min/max/avg/latest)
-- [x] `GET /api/v1/events` - List events with filtering
-- [x] `GET /api/v1/events/{id}` - Get single event
-- [x] `POST /api/v1/events` - Manual event creation
-- [x] `POST /api/v1/events/{id}/correct` - Correction (append-only via supersedes)
-- [x] `GET /api/v1/events/{id}/history` - Correction chain
-
-### Files Created/Modified
-- `backend/app/api/routes/trends.py` - Trend query endpoints
-- `backend/app/api/routes/events.py` - LabEvent CRUD endpoints
-- `backend/app/repositories/lab_event_repo.py` - Extended with trend/correction methods
-- `backend/app/main.py` - Route registration
-
-### Committed
-`669d510` feat(api): add trend and event endpoints for Phase 1 MVP
-
----
-
-## Task History
-
-| Date | Task | Status |
-|------|------|--------|
-| 2026-02-17 | Phase 1A: Foundation | ✅ Complete |
-| 2026-02-17 | Phase 1B: PDF Extraction Pipeline | 🚧 Code complete, needs testing |
-| 2026-02-17 | Phase 1C: Trend & Event Endpoints | ✅ Complete |
+### Files to Create/Edit
+- backend/app/db/models.py — Add new SQLAlchemy models
+- backend/alembic/versions/004_*.py — New migration
+- backend/app/repositories/graph_repo.py — New repository
+- backend/data/organ_systems.json — Seed data
+- backend/data/seed_graph.py — Seed script
