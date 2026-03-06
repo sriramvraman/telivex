@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "owner": "sriramvraman",
+    "name": "Telivex Health",
+    "slug": "telivex-health",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

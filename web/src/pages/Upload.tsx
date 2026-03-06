@@ -1,12 +1,10 @@
 import { useCallback, useState } from "react";
+import { Link } from "react-router-dom";
 import { uploadDocument } from "../api/client";
 import type { UploadResponse } from "../types";
 
 export function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [collectedDate, setCollectedDate] = useState(
-    new Date().toISOString().split("T")[0],
-  );
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<UploadResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,10 +33,9 @@ export function UploadPage() {
     setResult(null);
 
     try {
-      const response = await uploadDocument(file, collectedDate);
+      const response = await uploadDocument(file);
       setResult(response);
       setFile(null);
-      // Reset file input
       const fileInput = document.getElementById(
         "file-input",
       ) as HTMLInputElement;
@@ -48,24 +45,24 @@ export function UploadPage() {
     } finally {
       setUploading(false);
     }
-  }, [file, collectedDate]);
+  }, [file]);
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+    <div className="max-w-xl mx-auto">
+      <h2 className="text-xl font-semibold text-slate-900 mb-6">
         Upload Lab Report
       </h2>
 
-      <div className="bg-white rounded-lg shadow p-6 space-y-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-5">
         {/* File Input */}
         <div>
           <label
             htmlFor="file-input"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="block text-sm font-medium text-slate-700 mb-1.5"
           >
             PDF File
           </label>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+          <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-brand-400 transition-colors cursor-pointer">
             <input
               id="file-input"
               type="file"
@@ -75,97 +72,71 @@ export function UploadPage() {
             />
             <label htmlFor="file-input" className="cursor-pointer">
               {file ? (
-                <div className="text-gray-900">
-                  <p className="font-medium">{file.name}</p>
-                  <p className="text-sm text-gray-500">
+                <div>
+                  <p className="font-medium text-slate-900">{file.name}</p>
+                  <p className="text-sm text-slate-400 mt-0.5">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
               ) : (
-                <div className="text-gray-500">
-                  <p className="text-4xl mb-2">📄</p>
-                  <p className="font-medium">Click to select a PDF</p>
-                  <p className="text-sm">or drag and drop</p>
+                <div className="text-slate-400">
+                  <svg
+                    className="w-8 h-8 mx-auto mb-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    role="img"
+                    aria-label="Upload"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
+                  </svg>
+                  <p className="text-sm font-medium">Click to select a PDF</p>
+                  <p className="text-xs mt-0.5">
+                    Dates will be extracted automatically from the report
+                  </p>
                 </div>
               )}
             </label>
           </div>
         </div>
 
-        {/* Date Input */}
-        <div>
-          <label
-            htmlFor="collected-date"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Collection Date
-          </label>
-          <input
-            id="collected-date"
-            type="date"
-            value={collectedDate}
-            onChange={(e) => setCollectedDate(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-          <p className="mt-1 text-sm text-gray-500">
-            When were the samples collected?
-          </p>
-        </div>
-
-        {/* Error Display */}
+        {/* Error */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4">
-            <p className="text-red-700">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
 
-        {/* Success Display */}
+        {/* Success */}
         {result && (
-          <div className="bg-green-50 border border-green-200 rounded-md p-4 space-y-2">
-            <p className="text-green-700 font-medium">✓ Upload successful!</p>
-            <ul className="text-sm text-green-600 space-y-1">
-              <li>Document: {result.document.filename}</li>
-              <li>Pages: {result.document.page_count}</li>
-              <li>Events extracted: {result.events_created}</li>
-              {result.unmapped_rows > 0 && (
-                <li className="text-yellow-600">
-                  ⚠ Unmapped rows: {result.unmapped_rows} (need review)
-                </li>
-              )}
-            </ul>
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 space-y-2">
+            <p className="text-sm font-medium text-emerald-700">
+              Upload successful
+            </p>
+            <p className="text-sm text-emerald-600">{result.message}</p>
+            <Link
+              to={`/documents/${result.document_id}`}
+              className="inline-block text-sm font-medium text-brand-600 hover:text-brand-700 mt-1"
+            >
+              View document details &rarr;
+            </Link>
           </div>
         )}
 
-        {/* Upload Button */}
+        {/* Upload */}
         <button
           type="button"
           onClick={handleUpload}
           disabled={!file || uploading}
-          className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          className="w-full py-2.5 px-4 bg-brand-600 text-white font-medium rounded-lg hover:bg-brand-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
         >
-          {uploading ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="animate-spin">⏳</span>
-              Processing...
-            </span>
-          ) : (
-            "Upload & Extract"
-          )}
+          {uploading ? "Processing..." : "Upload & Extract"}
         </button>
-      </div>
-
-      {/* Instructions */}
-      <div className="mt-8 bg-gray-100 rounded-lg p-6">
-        <h3 className="font-medium text-gray-900 mb-2">
-          How extraction works:
-        </h3>
-        <ol className="list-decimal list-inside text-sm text-gray-600 space-y-1">
-          <li>Upload a PDF lab report</li>
-          <li>Tables are detected and parsed automatically</li>
-          <li>Biomarkers are matched against our registry</li>
-          <li>Values are normalized to standard units</li>
-          <li>Unrecognized items are flagged for review</li>
-        </ol>
       </div>
     </div>
   );

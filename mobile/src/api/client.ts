@@ -18,7 +18,7 @@ import type {
 // Use localhost for iOS simulator, 10.0.2.2 for Android emulator
 // In production, this would be the deployed API URL
 const API_BASE_URL = __DEV__
-  ? "http://192.168.1.2:8001/api/v1"
+  ? "http://192.168.68.55:8001/api/v1"
   : "https://api.telivex.health/api/v1";
 
 class TelivexApiClient {

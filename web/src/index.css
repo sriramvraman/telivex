@@ -1,1 +1,31 @@
 @import "tailwindcss";
+
+@theme {
+  /* Telivex Brand Colors - Teal-based medical palette */
+  --color-brand-50: #f0fdfa;
+  --color-brand-100: #ccfbf1;
+  --color-brand-200: #99f6e4;
+  --color-brand-300: #5eead4;
+  --color-brand-400: #2dd4bf;
+  --color-brand-500: #14b8a6;
+  --color-brand-600: #0d9488;
+  --color-brand-700: #0f766e;
+  --color-brand-800: #115e59;
+  --color-brand-900: #134e4a;
+  --color-brand-950: #042f2e;
+
+  /* Semantic aliases */
+  --color-primary: var(--color-brand-600);
+  --color-primary-hover: var(--color-brand-700);
+  --color-primary-light: var(--color-brand-50);
+
+  /* Status colors */
+  --color-high: #dc2626;
+  --color-low: #ea580c;
+  --color-normal: var(--color-brand-600);
+
+  /* Surface */
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f8fafc;
+  --color-surface-tertiary: #f1f5f9;
+}

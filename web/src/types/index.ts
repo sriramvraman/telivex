@@ -2,12 +2,14 @@
 
 /** Document metadata returned from the API */
 export interface Document {
-  id: string;
+  document_id: string;
   filename: string;
   uploaded_at: string;
+  collected_at: string | null;
+  reported_at: string | null;
   page_count: number;
-  file_hash: string;
-  storage_path: string;
+  event_count: number;
+  unmapped_count: number;
 }
 
 /** Biomarker from the registry */
@@ -42,7 +44,7 @@ export interface LabEvent {
   confidence: number;
   source_type: "pdf" | "manual" | "import";
   created_at: string;
-  flag: "H" | "L" | null;  // H=High, L=Low, null=Normal
+  flag: "H" | "L" | null; // H=High, L=Low, null=Normal
 }
 
 /** Unmapped row from extraction */
@@ -69,7 +71,7 @@ export interface TrendPoint {
   page: number | null;
   lab_name: string | null;
   confidence: number;
-  flag: "H" | "L" | null;  // H=High, L=Low, null=Normal
+  flag: "H" | "L" | null; // H=High, L=Low, null=Normal
 }
 
 /** Trend response for a biomarker */
@@ -96,9 +98,12 @@ export interface AvailableTrend {
 
 /** Upload response from document upload */
 export interface UploadResponse {
-  document: Document;
+  document_id: string;
+  filename: string;
+  page_count: number;
   events_created: number;
   unmapped_rows: number;
+  message: string;
 }
 
 /** API error response */
