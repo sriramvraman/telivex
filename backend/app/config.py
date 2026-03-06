@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     api_prefix: str = "/api/v1"
     debug: bool = True
 
+    # Auth
+    jwt_secret: str = "change-me-in-production-use-a-real-secret"
+    jwt_algorithm: str = "HS256"
+    jwt_expiry_hours: int = 72
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

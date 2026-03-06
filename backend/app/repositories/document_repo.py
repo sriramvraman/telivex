@@ -22,6 +22,9 @@ class DocumentRepository:
         storage_path: str,
         page_count: Optional[int] = None,
         file_hash: Optional[str] = None,
+        collected_at: Optional[datetime] = None,
+        reported_at: Optional[datetime] = None,
+        user_id: Optional[str] = None,
     ) -> Document:
         """Create a new document record."""
         document = Document(
@@ -31,6 +34,9 @@ class DocumentRepository:
             page_count=page_count,
             file_hash=file_hash,
             uploaded_at=datetime.utcnow(),
+            collected_at=collected_at,
+            reported_at=reported_at,
+            user_id=user_id,
         )
         self.db.add(document)
         self.db.commit()
@@ -41,14 +47,14 @@ class DocumentRepository:
         """Get document by ID."""
         return self.db.get(Document, document_id)
 
-    def get_all(self, skip: int = 0, limit: int = 100) -> list[Document]:
-        """Get all documents with pagination."""
-        stmt = (
-            select(Document)
-            .offset(skip)
-            .limit(limit)
-            .order_by(Document.uploaded_at.desc())
-        )
+    def get_all(
+        self, skip: int = 0, limit: int = 100, user_id: Optional[str] = None
+    ) -> list[Document]:
+        """Get documents with pagination. If user_id is provided, filter by owner."""
+        stmt = select(Document).order_by(Document.uploaded_at.desc())
+        if user_id:
+            stmt = stmt.where(Document.user_id == user_id)
+        stmt = stmt.offset(skip).limit(limit)
         return list(self.db.scalars(stmt).all())
 
     def get_event_count(self, document_id: str) -> int:

@@ -16,6 +16,28 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from app.db.database import Base
 
 
+class User(Base):
+    """User account for authentication and data ownership."""
+
+    __tablename__ = "users"
+
+    user_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    email: Mapped[str] = mapped_column(
+        String(255), unique=True, nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False
+    )
+
+    # Relationships
+    documents: Mapped[list["Document"]] = relationship(back_populates="user")
+
+    def __repr__(self) -> str:
+        return f"<User {self.user_id}: {self.email}>"
+
+
 class BiomarkerRegistry(Base):
     """
     Authoritative registry of biomarkers.
@@ -33,6 +55,8 @@ class BiomarkerRegistry(Base):
     panel_seed: Mapped[Optional[str]] = mapped_column(String(100))
     is_derived: Mapped[bool] = mapped_column(Boolean, default=False)
     aliases: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    loinc_code: Mapped[Optional[str]] = mapped_column(String(20), index=True)
+    loinc_component: Mapped[Optional[str]] = mapped_column(String(255))
     default_reference_range_notes: Mapped[Optional[str]] = mapped_column(Text)
 
     # Relationships
@@ -50,16 +74,22 @@ class Document(Base):
     __tablename__ = "documents"
 
     document_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("users.user_id"), index=True
+    )
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     storage_path: Mapped[str] = mapped_column(String(500), nullable=False)
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, nullable=False
     )
+    collected_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    reported_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
     page_count: Mapped[Optional[int]] = mapped_column(Integer)
     file_hash: Mapped[Optional[str]] = mapped_column(String(64))  # SHA-256
     metadata_json: Mapped[Optional[dict]] = mapped_column(JSONB)
 
-    # Relationships - cascade delete events and unmapped rows when document is deleted
+    # Relationships
+    user: Mapped[Optional["User"]] = relationship(back_populates="documents")
     lab_events: Mapped[list["LabEvent"]] = relationship(
         back_populates="document", cascade="all, delete-orphan"
     )
@@ -106,7 +136,7 @@ class LabEvent(Base):
     source_type: Mapped[str] = mapped_column(
         String(50), default="pdf_extraction"
     )  # pdf_extraction, manual_entry, import
-    
+
     # Abnormal flag from lab report: 'H' (high), 'L' (low), or null (normal/not specified)
     flag: Mapped[Optional[str]] = mapped_column(String(1))
 
@@ -127,6 +157,163 @@ class LabEvent(Base):
 
     def __repr__(self) -> str:
         return f"<LabEvent {self.event_id}: {self.biomarker_id} @ {self.collected_at}>"
+
+
+class OrganSystem(Base):
+    """
+    Hierarchical organ system taxonomy.
+    Biomarkers map to organ systems for clinical grouping and graph traversal.
+    """
+
+    __tablename__ = "organ_systems"
+
+    system_id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    parent_system_id: Mapped[Optional[str]] = mapped_column(
+        String(100), ForeignKey("organ_systems.system_id")
+    )
+
+    # Self-referential relationship
+    parent: Mapped[Optional["OrganSystem"]] = relationship(
+        "OrganSystem", remote_side="OrganSystem.system_id", back_populates="children"
+    )
+    children: Mapped[list["OrganSystem"]] = relationship(
+        "OrganSystem", back_populates="parent"
+    )
+    biomarker_mappings: Mapped[list["BiomarkerSystemMap"]] = relationship(
+        back_populates="organ_system"
+    )
+
+    def __repr__(self) -> str:
+        return f"<OrganSystem {self.system_id}: {self.name}>"
+
+
+class BiomarkerSystemMap(Base):
+    """
+    Junction table mapping biomarkers to organ systems.
+    A biomarker can belong to multiple systems (e.g., albumin is hepatic + nutritional).
+    """
+
+    __tablename__ = "biomarker_system_map"
+
+    biomarker_id: Mapped[str] = mapped_column(
+        String(255),
+        ForeignKey("biomarker_registry.biomarker_id"),
+        primary_key=True,
+    )
+    system_id: Mapped[str] = mapped_column(
+        String(100),
+        ForeignKey("organ_systems.system_id"),
+        primary_key=True,
+    )
+    relationship_type: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="primary"
+    )  # primary, secondary
+
+    # Relationships
+    biomarker: Mapped["BiomarkerRegistry"] = relationship()
+    organ_system: Mapped["OrganSystem"] = relationship(
+        back_populates="biomarker_mappings"
+    )
+
+    __table_args__ = (Index("ix_biomarker_system_map_system", "system_id"),)
+
+    def __repr__(self) -> str:
+        return f"<BiomarkerSystemMap {self.biomarker_id} -> {self.system_id}>"
+
+
+class BiomarkerCorrelation(Base):
+    """
+    Clinical correlations between biomarkers.
+    Captures known relationships: clinical_panel, inverse, derived_from.
+    """
+
+    __tablename__ = "biomarker_correlations"
+
+    biomarker_id_a: Mapped[str] = mapped_column(
+        String(255),
+        ForeignKey("biomarker_registry.biomarker_id"),
+        primary_key=True,
+    )
+    biomarker_id_b: Mapped[str] = mapped_column(
+        String(255),
+        ForeignKey("biomarker_registry.biomarker_id"),
+        primary_key=True,
+    )
+    correlation_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # clinical_panel, inverse, derived_from
+    description: Mapped[Optional[str]] = mapped_column(Text)
+
+    # Relationships
+    biomarker_a: Mapped["BiomarkerRegistry"] = relationship(
+        foreign_keys=[biomarker_id_a]
+    )
+    biomarker_b: Mapped["BiomarkerRegistry"] = relationship(
+        foreign_keys=[biomarker_id_b]
+    )
+
+    def __repr__(self) -> str:
+        return f"<BiomarkerCorrelation {self.biomarker_id_a} <-> {self.biomarker_id_b}>"
+
+
+class HealthSnapshot(Base):
+    """
+    Point-in-time grouping of LabEvents from the same collection date.
+    User-scoped for privacy.
+    """
+
+    __tablename__ = "health_snapshots"
+
+    snapshot_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.user_id"), nullable=False, index=True
+    )
+    snapshot_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    label: Mapped[Optional[str]] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False
+    )
+
+    # Relationships
+    user: Mapped["User"] = relationship()
+    events: Mapped[list["SnapshotEvent"]] = relationship(
+        back_populates="snapshot", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        Index("ix_health_snapshots_user_date", "user_id", "snapshot_date"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<HealthSnapshot {self.snapshot_id}: {self.snapshot_date}>"
+
+
+class SnapshotEvent(Base):
+    """
+    Junction table linking snapshots to lab events.
+    """
+
+    __tablename__ = "snapshot_events"
+
+    snapshot_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("health_snapshots.snapshot_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    event_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("lab_events.event_id"),
+        primary_key=True,
+    )
+
+    # Relationships
+    snapshot: Mapped["HealthSnapshot"] = relationship(back_populates="events")
+    event: Mapped["LabEvent"] = relationship()
+
+    def __repr__(self) -> str:
+        return f"<SnapshotEvent {self.snapshot_id} -> {self.event_id}>"
 
 
 class UnmappedRow(Base):

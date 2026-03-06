@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,50 +14,80 @@ const navItems = [
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🩺</span>
-              <h1 className="text-xl font-semibold text-gray-900">Telivex</h1>
-            </div>
-            <nav className="flex gap-1">
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.path;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-blue-100 text-blue-700"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                    }`}
+          <div className="flex justify-between items-center h-14">
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  role="img"
+                  aria-label="Telivex logo"
+                >
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                </svg>
+              </div>
+              <span className="text-lg font-semibold text-slate-900 group-hover:text-brand-700 transition-colors">
+                Telivex
+              </span>
+            </Link>
+            <div className="flex items-center gap-4">
+              <nav className="flex gap-1">
+                {navItems.map((item) => {
+                  const isActive =
+                    item.path === "/"
+                      ? location.pathname === "/"
+                      : location.pathname.startsWith(item.path);
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={`px-3.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                        isActive
+                          ? "bg-brand-50 text-brand-700"
+                          : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+              {user && (
+                <div className="flex items-center gap-2 pl-3 border-l border-slate-200">
+                  <span className="text-xs text-slate-500">{user.name}</span>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="text-xs text-slate-400 hover:text-red-500 transition-colors"
                   >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {children}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <p className="text-sm text-gray-500 text-center">
-            Telivex Health — Patient-controlled longitudinal health
-            reconstruction
+      <footer className="border-t border-slate-200 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <p className="text-xs text-slate-400 text-center">
+            Telivex Health — Patient-controlled health reconstruction
           </p>
         </div>
       </footer>

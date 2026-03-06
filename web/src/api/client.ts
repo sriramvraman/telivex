@@ -14,6 +14,12 @@ import type {
 } from "../types";
 
 const API_BASE = "/api/v1";
+const TOKEN_KEY = "telivex_token";
+
+function authHeaders(): Record<string, string> {
+  const token = localStorage.getItem(TOKEN_KEY);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 class ApiError extends Error {
   status: number;
@@ -39,27 +45,24 @@ async function handleResponse<T>(response: Response): Promise<T> {
 // ============ Document Endpoints ============
 
 /** Upload a PDF document for extraction */
-export async function uploadDocument(
-  file: File,
-  collectedDate: string,
-): Promise<UploadResponse> {
+export async function uploadDocument(file: File): Promise<UploadResponse> {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(
-    `${API_BASE}/documents/upload?collected_date=${collectedDate}`,
-    {
-      method: "POST",
-      body: formData,
-    },
-  );
+  const response = await fetch(`${API_BASE}/documents/upload`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: formData,
+  });
 
   return handleResponse<UploadResponse>(response);
 }
 
 /** List all documents */
 export async function listDocuments(): Promise<Document[]> {
-  const response = await fetch(`${API_BASE}/documents`);
+  const response = await fetch(`${API_BASE}/documents`, {
+    headers: authHeaders(),
+  });
   return handleResponse<Document[]>(response);
 }
 

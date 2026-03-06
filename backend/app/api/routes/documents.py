@@ -9,7 +9,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_optional_user
 from app.db.database import get_db
+from app.db.models import User
 from app.repositories.document_repo import DocumentRepository
 from app.repositories.lab_event_repo import LabEventRepository, UnmappedRowRepository
 from app.schemas.document import (
@@ -41,11 +43,9 @@ def get_file_hash(file_path: Path) -> str:
 @router.post("/upload", response_model=DocumentUploadResponse)
 async def upload_document(
     file: UploadFile = File(...),
-    collected_date: Optional[str] = Query(
-        None, description="Collection date (YYYY-MM-DD) if not in PDF"
-    ),
     lab_name: Optional[str] = Query(None, description="Lab name if not in PDF"),
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user),
 ):
     """
     Upload a lab report PDF and extract biomarker data.
@@ -54,6 +54,11 @@ async def upload_document(
     1. Canonicalized against the BiomarkerRegistry
     2. Normalized to canonical units
     3. Stored as LabEvents with full provenance
+
+    Dates are extracted from the PDF:
+    - collected_at: when the sample was collected
+    - reported_at: when the lab report was generated
+    - uploaded_at: when the document was uploaded (auto-set)
 
     Rows that cannot be matched are stored as UnmappedRows for review.
     """
@@ -81,13 +86,34 @@ async def upload_document(
         # Log errors but continue processing
         pass
 
-    # Create document record
+    # Parse dates extracted from PDF (both may be None)
+    collected_at: Optional[datetime] = None
+    reported_at: Optional[datetime] = None
+
+    if extraction_result.collected_date:
+        try:
+            collected_at = datetime.strptime(
+                extraction_result.collected_date, "%Y-%m-%d"
+            )
+        except ValueError:
+            pass
+
+    if extraction_result.reported_date:
+        try:
+            reported_at = datetime.strptime(extraction_result.reported_date, "%Y-%m-%d")
+        except ValueError:
+            pass
+
+    # Create document record with extracted dates
     doc_repo = DocumentRepository(db)
     document = doc_repo.create(
         filename=file.filename,
         storage_path=str(file_path),
         page_count=extraction_result.page_count,
         file_hash=file_hash,
+        collected_at=collected_at,
+        reported_at=reported_at,
+        user_id=current_user.user_id if current_user else None,
     )
 
     # Initialize services
@@ -95,40 +121,21 @@ async def upload_document(
     normalizer = UnitNormalizer()
     event_repo = LabEventRepository(db)
     unmapped_repo = UnmappedRowRepository(db)
-    
-    # DEBUG: Log alias map size
-    print(f"DEBUG: Canonicalizer loaded {len(canonicalizer._alias_map)} aliases")
-    print(f"DEBUG: Sample aliases - 'rbc count' in map: {'rbc count' in canonicalizer._alias_map}")
 
-    # Parse collected date: user-provided > extracted from PDF > current date
-    parsed_date = None
-    
-    if collected_date:
-        # User provided date takes priority
-        try:
-            parsed_date = datetime.strptime(collected_date, "%Y-%m-%d")
-        except ValueError:
-            pass
-    
-    if not parsed_date and extraction_result.collected_date:
-        # Try to use date extracted from PDF
-        try:
-            parsed_date = datetime.strptime(extraction_result.collected_date, "%Y-%m-%d")
-        except ValueError:
-            pass
-    
-    if not parsed_date:
-        # Default to now if no date found
-        parsed_date = datetime.utcnow()
+    # LabEvent collected_at: prefer collected_at, fall back to reported_at, then uploaded_at
+    event_date = collected_at or reported_at or document.uploaded_at
 
     events_created = 0
     unmapped_count = 0
+    # Track (biomarker_id, value_normalized) to deduplicate repeated values
+    # within the same document (e.g., Creatinine repeated on eGFR page)
+    seen_events: set[tuple[str, float]] = set()
 
     # Process each extracted row
     for row in extraction_result.rows:
         # Try to canonicalize the label (with section context for disambiguation)
         canon_result = canonicalizer.canonicalize(row.label, section=row.section)
-        
+
         if not canon_result.matched:
             unmapped_repo.create(
                 document_id=document.document_id,
@@ -148,7 +155,7 @@ async def upload_document(
                 unit=row.unit,
                 canonical_unit=canon_result.match.canonical_unit,
             )
-        except Exception as e:
+        except Exception:
             unmapped_repo.create(
                 document_id=document.document_id,
                 raw_label=row.label,
@@ -170,11 +177,17 @@ async def upload_document(
             unmapped_count += 1
             continue
 
+        # Deduplicate: skip if same biomarker + same value already seen in this document
+        dedup_key = (canon_result.match.biomarker_id, norm_result.value_normalized)
+        if dedup_key in seen_events:
+            continue
+        seen_events.add(dedup_key)
+
         # Create lab event
         event_repo.create(
             biomarker_id=canon_result.match.biomarker_id,
             document_id=document.document_id,
-            collected_at=parsed_date,
+            collected_at=event_date,
             value_original=norm_result.value_original,
             unit_original=norm_result.unit_original,
             value_normalized=norm_result.value_normalized,
@@ -205,16 +218,20 @@ def list_documents(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user),
 ):
-    """List all uploaded documents."""
+    """List documents. When logged in, shows only the user's documents."""
     doc_repo = DocumentRepository(db)
-    documents = doc_repo.get_all(skip=skip, limit=limit)
+    user_id = current_user.user_id if current_user else None
+    documents = doc_repo.get_all(skip=skip, limit=limit, user_id=user_id)
 
     return [
         DocumentResponse(
             document_id=doc.document_id,
             filename=doc.filename,
             uploaded_at=doc.uploaded_at,
+            collected_at=doc.collected_at,
+            reported_at=doc.reported_at,
             page_count=doc.page_count,
             event_count=doc_repo.get_event_count(doc.document_id),
             unmapped_count=doc_repo.get_unmapped_count(doc.document_id),
@@ -236,6 +253,8 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
         document_id=document.document_id,
         filename=document.filename,
         uploaded_at=document.uploaded_at,
+        collected_at=document.collected_at,
+        reported_at=document.reported_at,
         page_count=document.page_count,
         event_count=doc_repo.get_event_count(document.document_id),
         unmapped_count=doc_repo.get_unmapped_count(document.document_id),
@@ -308,6 +327,86 @@ def get_unmapped_rows(
         )
         for row in rows
     ]
+
+
+@router.post("/{document_id}/unmapped/{row_id}/resolve")
+def resolve_unmapped_row(
+    document_id: str,
+    row_id: str,
+    biomarker_id: str = Query(..., description="Biomarker ID to map to"),
+    db: Session = Depends(get_db),
+):
+    """Manually map an unmapped row to a biomarker from the registry."""
+    from app.db.models import BiomarkerRegistry
+
+    doc_repo = DocumentRepository(db)
+    document = doc_repo.get_by_id(document_id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    # Verify biomarker exists in registry
+    biomarker = db.get(BiomarkerRegistry, biomarker_id)
+    if not biomarker:
+        raise HTTPException(status_code=404, detail="Biomarker not found in registry")
+
+    unmapped_repo = UnmappedRowRepository(db)
+    row = unmapped_repo.resolve(row_id, biomarker_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Unmapped row not found")
+
+    # Create a lab event from the resolved row
+    normalizer = UnitNormalizer()
+    try:
+        norm_result = normalizer.normalize(
+            value=row.raw_value or "0",
+            unit=row.raw_unit,
+            canonical_unit=biomarker.canonical_unit,
+        )
+    except Exception:
+        norm_result = None
+
+    if norm_result and norm_result.success:
+        # Use document dates: prefer collected_at, fall back to reported_at, then uploaded_at
+        collected_at = (
+            document.collected_at or document.reported_at or document.uploaded_at
+        )
+
+        event_repo = LabEventRepository(db)
+        event_repo.create(
+            biomarker_id=biomarker_id,
+            document_id=document_id,
+            collected_at=collected_at,
+            value_original=norm_result.value_original,
+            unit_original=norm_result.unit_original,
+            value_normalized=norm_result.value_normalized,
+            unit_canonical=norm_result.unit_canonical,
+            page=row.page,
+            confidence=1.0,
+        )
+
+    unmapped_repo.commit()
+    return {"message": "Row resolved successfully", "biomarker_id": biomarker_id}
+
+
+@router.post("/{document_id}/unmapped/{row_id}/ignore")
+def ignore_unmapped_row(
+    document_id: str,
+    row_id: str,
+    db: Session = Depends(get_db),
+):
+    """Mark an unmapped row as ignored."""
+    doc_repo = DocumentRepository(db)
+    document = doc_repo.get_by_id(document_id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    unmapped_repo = UnmappedRowRepository(db)
+    row = unmapped_repo.ignore(row_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Unmapped row not found")
+
+    unmapped_repo.commit()
+    return {"message": "Row ignored"}
 
 
 @router.delete("/{document_id}")
